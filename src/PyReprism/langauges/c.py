@@ -7,22 +7,13 @@ class C:
 
     @staticmethod
     def comment():
+    
+        full_regex = (r'(?P<comment>//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)')
+
+        partial_comment_regex = (r'(?P<comment>/\*.*?$|^.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)')
         
-        single_line_comment = r'(?P<comment>#.*?$)'
-        single_quote_string = r"(?P<noncomment>'(\\.|[^\\'])*')"
-        double_quote_string = r'(?P<noncomment>"(\\.|[^\\"])*")'
-        non_comment_part = r".[^#'\"]*"
-        triple_double_quotes = r'(?P<multilinecomment>""".*?""")'
-        triple_single_quotes = r"(?P<multilinecomment>'''.*?''')"
-        
-        pattern = (
-            f"{single_line_comment}|"
-            f"{triple_double_quotes}|"
-            f"{triple_single_quotes}|"
-            f"{single_quote_string}|"
-            f"{double_quote_string}|"
-            f"{non_comment_part}"
-        )
+        # Combine both regexes
+        pattern = f"{full_regex}|{partial_comment_regex}"
         
         return re.compile(pattern, re.DOTALL | re.MULTILINE)
         
