@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "PyReprism"
+version = "0.0.1"
+authors = [
+  { name= "Daniel Ogenrwot", email="danielogen2@gmail.com" },
+]
+maintainer = [
+    { name = "Daniel Ogenrwot", email="danielogen2@gmail.com"}
+]
+description = "PyReprism is a collection of methods essential for common preprocessing tasks in code clone detection research"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/unlv-evol/PyReprism"
+Issues = "https://github.com/unlv-evol/PyReprism/issues"
