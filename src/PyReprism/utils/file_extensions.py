@@ -20,160 +20,57 @@ class FileExtension:
     bro: str = "xxxxx"
     c: str = ".c"
     clike: str = "xxxxx"
-
     clojure: str = "xxxxx"
-
-
     coffeescript: str = "xxxxx"
-
-
     cpp: str = ".cpp"
-
-
     crystal: str = "xxxxx"
-
-
     csharp: str = ".csharp"
-
-
     csp: str = "xxxxx"
-
-
     css_extras: str = "xxxxx"
-
-
     css: str = ".css"
-
-
     d: str = "xxxxx"
-
-
     dart: str = ".dart"
-
-
     diff: str = ".diff"
-
-
     django: str = "xxxxx"
-
-
     docker: str = "xxxxx"
-
-
     eiffel: str = "xxxxx"
-
-
     elixir: str = "xxxxx"
-
-
     erb: str = "xxxxx"
-
-
     erlang: str = "xxxxx"
-
-
     flow: str = "xxxxx"
-
-
     fortran: str = "xxxxx"
-
-
     fsharp: str = "xxxxx"
-
-
     gedcom: str = "xxxxx"
-
-
     gherkin: str = "xxxxx"
-
-
     git: str = ".git"
-
-
     glsl: str = "xxxxx"
-
-
     go: str = ".go"
-
-
     graphql: str = "xxxxx"
-
-
     groovy: str = "xxxxx"
-
-
     haml: str = "xxxxx"
-
-
     handlebars: str = "xxxxx"
-
-
     haskell: str = "xxxxx"
-
-
     haxe: str = "xxxxx"
-
-
     hpkp: str = "xxxxx"
-
-
     hsts: str = "xxxxx"
-
-
     http: str = "xxxxx"
-
-
     ichigojam: str = "xxxxx"
-
-
     icon: str = "xxxxx"
-
-
     inform7: str = "xxxxx"
-
-
     ini: str = ".ini"
-
-
     io: str = "xxxxx"
-
-
     j: str = "xxxxx"
-
-
     java: str = ".java"
-
-
     javascript: str = ".js"
-
-
     jolie: str = "xxxxx"
-
-
     json: str = ".json"
-
-
     jsx: str = ".jsx"
-
-
     julia: str = "xxxxx"
-
-
     keyman: str = "xxxxx"
-
-
     kotlin: str = ".kt"
-
-
     latex: str = "xxxxx"
-
-
     less: str = "xxxxx"
-
-
     liquid: str = "xxxxx"
-
-
     lisp: str = "xxxxx"
     livescript: str = "xxxxx"
     lolcode: str = "xxxxx"
@@ -193,7 +90,7 @@ class FileExtension:
     nix: str = "xxxxx"
     nsis: str = "xxxxx"
     objectivec: str = "xxxxx"
-    ocaml: str = "xxxx"
+    ocaml: str = ".ocaml"
     opencl: str = "xxxxx"
     oz: str = "xxxxx"
     parigp: str = "xxxxx"
@@ -223,10 +120,10 @@ class FileExtension:
     ruby: str = "xxxxx"
     rust: str = "xxxxx"
     sas: str = "xxxxx"
-    sass: str = "xxxxx"
-    scala: str = "xxxxx"
+    sass: str = ".sass"
+    scala: str = ".scala"
     scheme: str = "xxxxx"
-    scss: str = "xxxxx"
+    scss: str = ".scss"
     smalltalk: str = "xxxxx"
     smarty: str = "xxxxx"
     soy: str = "xxxxx"
@@ -234,7 +131,7 @@ class FileExtension:
     swift: str = "xxxxx"
     tcl: str = "xxxxx"
     textile: str = "xxxxx"
-    tsx: str = "xxxxx"
+    tsx: str = ".tsx"
     twig: str = "xxxxx"
     typescript: str = "xxxxx"
     vbnet: str = "xxxxx"
