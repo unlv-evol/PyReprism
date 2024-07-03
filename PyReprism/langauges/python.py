@@ -30,3 +30,7 @@ class Python:
     @staticmethod
     def file_extension():
         return FileExtension.python
+    
+    @staticmethod
+    def keywords():
+        pass

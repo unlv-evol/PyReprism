@@ -7,18 +7,30 @@ version = "0.0.1"
 authors = [
   { name= "Daniel Ogenrwot", email="danielogen2@gmail.com" },
 ]
-maintainer = [
-    { name = "Daniel Ogenrwot", email="danielogen2@gmail.com"}
-]
-description = "PyReprism is a collection of methods essential for common preprocessing tasks in code clone detection research"
+packages=find_packages('.', exclude=['tests*']),
+license='Apache License',
+package_dir={'PyReprism': 'PyReprism'},
+python_requires='>=3.5',
+description = 'Framework for Source Code Preprocessing'
+long_description = 'PyReprism is a collection of methods essential for common preprocessing tasks in code clone detection research'
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    'Environment :: Console',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Operating System :: POSIX',
+    'Operating System :: Microsoft :: Windows1,
+    'Operating System :: MacOS :: MacOS X1,
 ]
 
 [project.urls]
-Homepage = "https://github.com/unlv-evol/PyReprism"
-Issues = "https://github.com/unlv-evol/PyReprism/issues"
+Homepage = 'https://github.com/unlv-evol/PyReprism'
+Issues = 'https://github.com/unlv-evol/PyReprism/issues'

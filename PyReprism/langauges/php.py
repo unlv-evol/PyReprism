@@ -1,5 +1,5 @@
 import re
-from utils.file_extensions import FileExtension
+from PyReprism.utils.extensions import FileExtension
 
 class PHP:
     def __init__():
