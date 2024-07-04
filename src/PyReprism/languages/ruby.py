@@ -1,5 +1,5 @@
 import re
-from PyReprism.utils.extensions import FileExtension
+from PyReprism.utils import extension
 
 class Ruby:
     def __init__():
@@ -17,7 +17,10 @@ class Ruby:
         
         return re.compile(pattern, re.DOTALL | re.MULTILINE)
         
-    
     @staticmethod
-    def file_extension():
-        return FileExtension.ruby
+    def keywords() -> list:
+        pass
+
+    @staticmethod
+    def file_extension() -> str:
+        return extension.ruby

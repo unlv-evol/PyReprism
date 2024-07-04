@@ -1,5 +1,5 @@
 import re
-from PyReprism.utils.extensions import FileExtension
+from PyReprism.utils import extension
 
 class Perl:
     def __init__():
@@ -13,10 +13,13 @@ class Perl:
         
         return pattern
         
-    
     @staticmethod
-    def file_extension():
-        return FileExtension.perl
+    def keywords() -> list:
+        pass
+
+    @staticmethod
+    def file_extension() -> str:
+        return extension.perl
 
 
 
