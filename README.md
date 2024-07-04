@@ -30,8 +30,8 @@ Read the [docs]() for more usage examples.
 ## How to Contribute
 
 ```shell
-git clone https://github.com/ishepard/pydriller.git
-cd pydriller
+git clone https://github.com/unlv-evol/PyReprism.git
+cd PyReprism
 ```
 **(Optional)** It is suggested to make use of virtualenv. Therefore, before installing the requirements run:
 
