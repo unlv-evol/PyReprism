@@ -1,5 +1,5 @@
 import re
-from PyReprism.utils.extensions import FileExtension
+from PyReprism.utils import extension
 
 class PHP:
     def __init__():
@@ -10,7 +10,11 @@ class PHP:
         pattern = re.compile(r'(?P<comment>#.*?$|//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#/\'"{}]*)', re.DOTALL | re.MULTILINE)
 
         return pattern
-        
+    
+    @staticmethod
+    def keywords() -> list:
+        pass
+    
     @staticmethod
     def file_extension():
-        return FileExtension.php
+        return extension.php

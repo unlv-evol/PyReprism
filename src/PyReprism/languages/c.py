@@ -1,5 +1,5 @@
 import re
-from PyReprism.utils.extensions import FileExtension
+from PyReprism.utils import extension
 
 class C:
     def __init__():
@@ -18,7 +18,7 @@ class C:
     
     @staticmethod
     def file_extension():
-        return FileExtension.c
+        return extension.c
     
     @staticmethod
     def keywords() -> list:

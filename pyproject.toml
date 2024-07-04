@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.0.1"
+version = "0.0.13"
 authors = [
   { name= "UNLV EVOL LAB", email="ogenrwot@unlv.nevada.edu" },
 ]
@@ -39,6 +39,7 @@ exclude = [
 dev = [
   "flake8",
   "pytest",
+  "pytest-cov",
 ]
 
 [project.urls]
