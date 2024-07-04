@@ -28,9 +28,12 @@ class Python:
         
     
     @staticmethod
-    def file_extension():
+    def file_extension() -> str:
         return FileExtension.python
     
     @staticmethod
-    def keywords():
+    def keywords() -> list:
+        pass
+    @staticmethod
+    def remove_comments(source: str) -> str:
         pass

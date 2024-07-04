@@ -9,9 +9,7 @@ class C:
     def comment():
     
         full_regex = (r'(?P<comment>//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)')
-
         partial_comment_regex = (r'(?P<comment>/\*.*?$|^.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)')
-        
         # Combine both regexes
         pattern = f"{full_regex}|{partial_comment_regex}"
         
@@ -21,3 +19,11 @@ class C:
     @staticmethod
     def file_extension():
         return FileExtension.c
+    
+    @staticmethod
+    def keywords() -> list:
+        pass
+
+    @staticmethod
+    def remove_comments(source: str) -> str:
+        pass
