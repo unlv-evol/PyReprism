@@ -17,5 +17,12 @@ class MarkUp:
     @staticmethod
     def file_extension():
         return extension.markup
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = MarkUp.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)
 
 

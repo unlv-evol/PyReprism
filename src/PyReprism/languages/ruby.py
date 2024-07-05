@@ -24,3 +24,10 @@ class Ruby:
     @staticmethod
     def file_extension() -> str:
         return extension.ruby
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Ruby.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)

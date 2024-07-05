@@ -20,3 +20,10 @@ class Java:
     @staticmethod
     def remove_comments(source: str) -> str:
         pass
+
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Java.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)

@@ -27,3 +27,10 @@ class C:
     @staticmethod
     def remove_comments(source: str) -> str:
         pass
+
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = C.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)

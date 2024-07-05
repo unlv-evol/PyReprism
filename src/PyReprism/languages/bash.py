@@ -19,3 +19,10 @@ class Bash:
     @staticmethod
     def file_extension() -> str:
         return extension.bash
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Bash.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)
