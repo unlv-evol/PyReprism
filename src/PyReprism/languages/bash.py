@@ -13,9 +13,20 @@ class Bash:
         return pattern
     
     @staticmethod
+    def remove_comments(source: str) -> str:
+        return re.sub(Bash.comment, '', source)
+    
+    @staticmethod
     def keywords() -> str:
         pass
         
     @staticmethod
     def file_extension() -> str:
         return extension.bash
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Bash.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.sub(re.compile(pattern), '', source)

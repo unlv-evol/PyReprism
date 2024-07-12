@@ -18,3 +18,10 @@ class PHP:
     @staticmethod
     def file_extension():
         return extension.php
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = PHP.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)

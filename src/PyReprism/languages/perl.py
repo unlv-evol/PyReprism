@@ -20,6 +20,17 @@ class Perl:
     @staticmethod
     def file_extension() -> str:
         return extension.perl
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Perl.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)
+    
+    @staticmethod
+    def remove_comments(source: str):
+        return re.sub(Perl.comment, '', source);
 
 
 

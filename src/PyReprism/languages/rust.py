@@ -15,3 +15,10 @@ class Rust:
     @staticmethod
     def file_extension():
         return extension.rust
+    
+    @staticmethod
+    def remove_keywords(source: str):
+        keywords = Rust.keywords()
+        pattern = r'\b(' + '|'.join(keywords) + r')\b'
+  
+        return re.compile(pattern)
