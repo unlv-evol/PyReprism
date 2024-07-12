@@ -7,10 +7,17 @@ class Java:
 
     @staticmethod
     def comment():
-        pass
+    
+        full_regex = (r'(?P<comment>//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)')
+        partial_comment_regex = (r'(?P<comment>/\*.*?$|^.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)')
+
+        pattern = f"{full_regex}|{partial_comment_regex}"
         
+        return re.compile(pattern, re.DOTALL | re.MULTILINE)
+        
+    
     @staticmethod
-    def file_extension() -> str:
+    def file_extension():
         return extension.java
     
     @staticmethod
@@ -19,7 +26,7 @@ class Java:
 
     @staticmethod
     def remove_comments(source: str) -> str:
-        pass
+        return re.sub(Java.comment, '', source)
 
     @staticmethod
     def remove_keywords(source: str):

@@ -27,6 +27,10 @@ class Perl:
         pattern = r'\b(' + '|'.join(keywords) + r')\b'
   
         return re.compile(pattern)
+    
+    @staticmethod
+    def remove_comments(source: str):
+        return re.sub(Perl.comment, '', source);
 
 
 
