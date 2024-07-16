@@ -1,38 +1,53 @@
 import re
 from PyReprism.utils import extension
 
+
 class JavaScript:
     def __init__():
         pass
 
     @staticmethod
-    def comment():
-
-        # JS, SCALA, CPP, Kotlin, gradle
-        full_regex = re.compile(r'(?P<comment>//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)', re.DOTALL | re.MULTILINE)
-        partial_comment_regex = re.compile(r'(?P<comment>/\*.*?$|^.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)', re.DOTALL)
-
-        pattern = f"{full_regex}|{partial_comment_regex}"
-        
-        return re.compile(pattern, re.DOTALL | re.MULTILINE)
-        
-    
-    @staticmethod
-    def file_extension():
+    def file_extension() -> str:
         return extension.javascript
     
     @staticmethod
     def keywords() -> list:
-        pass
-
+         keyword = 'as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield'.split('|')
+        
+         return keyword
+    
     @staticmethod
-    def remove_comments(source: str) -> str:
-        return re.sub(JavaScript.comment, '', source)
+    def comment_regex():
+        pattern = re.compile(r'(?P<comment>//.*?$|/\*.*?\*/|/\*.*?$|^.*?\*/|[{}]+)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)', re.DOTALL | re.MULTILINE)
+        return pattern
+
+    
+    @staticmethod
+    def number_regex():
+        pattern = re.compile(r'\b(?:0[xX][\dA-Fa-f]+|0[bB][01]+|0[oO][0-7]+|NaN|Infinity)\b|(?:\b\d+\.?\d*|\B\.\d+)(?:[Ee][+-]?\d+)?')
+        return pattern
+    
+    @staticmethod
+    def operator_regex():
+        pattern = re.compile(r'-[-=]?|\+[+=]?|!=?=?|<<?=?|>>?>?=?|=(?:==?|>)?|&[&=]?|\|[|=]?|\*\*?=?|\/=?|~|\^=?|%=?|\?|\.{3}')
+        return pattern
+    
+    @staticmethod
+    def keywords_regex():
+        return re.compile(r'\b(' + '|'.join(JavaScript.keywords()) + r')\b')
+    
+    @staticmethod
+    def remove_comments(source_code: str, isList: bool = False) -> str:
+        result = []
+        for match in JavaScript.comment_regex().finditer(source_code):
+            if match.group('noncomment'):
+                result.append(match.group('noncomment'))
+        if isList:
+            return result
+        return ''.join(result)
+
 
     @staticmethod
     def remove_keywords(source: str):
-        keywords = JavaScript.keywords()
-        pattern = r'\b(' + '|'.join(keywords) + r')\b'
-  
-        return re.sub(re.compile(pattern), '', source)
-
+        return re.sub(re.compile(JavaScript.keywords_regex()), '', source)
+    
