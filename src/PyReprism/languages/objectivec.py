@@ -2,7 +2,7 @@ import re
 from PyReprism.utils import extension
 
 class ObjectiveC:
-    def __init__(self):
+    def __init__():
         pass
 
     @staticmethod
