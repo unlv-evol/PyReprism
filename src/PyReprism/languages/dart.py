@@ -1,37 +1,52 @@
 import re
 from PyReprism.utils import extension
 
-class Dart():
+
+class Dart:
     def __init__():
         pass
 
     @staticmethod
-    def comment():
-
-        # JS, SCALA, CPP, Kotlin, gradle
-        full_regex = re.compile(r'(?P<comment>//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)', re.DOTALL | re.MULTILINE)
-        partial_comment_regex = re.compile(r'(?P<comment>/\*.*?$|^.*?\*/)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)', re.DOTALL)
-
-        pattern = f"{full_regex}|{partial_comment_regex}"
-        
-        return re.compile(pattern, re.DOTALL | re.MULTILINE)
-        
-    
-    @staticmethod
-    def file_extension():
+    def file_extension() -> str:
         return extension.dart
     
     @staticmethod
     def keywords() -> list:
-        pass
-
+         keyword = 'abstract|assert|async|await|break|case|catch|class|const|continue|default|deferred|do|dynamic|else|enum|export|external|extends|factory|final|finally|for|get|if|implements|import|in|library|new|null|operator|part|rethrow|return|set|static|super|switch|this|throw|try|typedef|var|void|while|with|yield|sync'.split('|')
+        
+         return keyword
+    
     @staticmethod
-    def remove_comments(source: str) -> str:
-        return re.sub(Dart.comment, '', source)
+    def comment_regex():
+        pattern = pattern = re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/|///.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)', re.DOTALL | re.MULTILINE)
+        return pattern
+
+    
+    @staticmethod
+    def number_regex():
+        pattern = re.compile(r'\b0x[\da-f]+\b|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?')
+        return pattern
+    
+    @staticmethod
+    def operator_regex():
+        pattern = re.compile(r'\bis!|\b(?:as|is)\b|\+\+|--|&&|\|\||<<=?|>>=?|~(?:\/=?)?|[+\-*\/%&^|=!<>]=?|\?')
+        return pattern
+    
+    @staticmethod
+    def keywords_regex():
+        return re.compile(r'\b(' + '|'.join(Dart.keywords()) + r')\b')
+    
+    @staticmethod
+    def remove_comments(source_code: str, isList: bool = False) -> str:
+        result = []
+        for match in Dart.comment_regex().finditer(source_code):
+            if match.group('noncomment'):
+                result.append(match.group('noncomment'))
+        if isList:
+            return result
+        return ''.join(result)
+
 
     @staticmethod
     def remove_keywords(source: str):
-        keywords = Dart.keywords()
-        pattern = r'\b(' + '|'.join(keywords) + r')\b'
-  
-        return re.sub(re.compile(pattern), '', source)
+        return re.sub(re.compile(Dart.keywords_regex()), '', source)
