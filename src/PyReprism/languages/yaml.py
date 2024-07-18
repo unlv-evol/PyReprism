@@ -1,37 +1,53 @@
 import re
 from PyReprism.utils import extension
 
+
 class Yaml:
     def __init__():
         pass
 
     @staticmethod
-    def comment():
-        # YAML, YML
-        full_regex = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)', re.DOTALL | re.MULTILINE)
-        double_quote_regex = re.compile(r'["]+')
-        single_quote_regex = re.compile(r"[']+")
-
-        pattern = f"{full_regex}|{double_quote_regex}|{single_quote_regex}"
-        
-        return re.compile(pattern, re.DOTALL | re.MULTILINE)
-        
-    
-    @staticmethod
-    def file_extension():
-        return extension.kotlin
+    def file_extension() -> str:
+        return extension.yaml
     
     @staticmethod
     def keywords() -> list:
-        pass
-
+         keyword = ''.split('|')
+        
+         return keyword
+    
     @staticmethod
-    def remove_comments(source: str) -> str:
-        return re.sub(Kotlin.comment, '', source)
+    def comment_regex():
+        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]*[^\n]*)', re.MULTILINE)
+        return pattern
+
+    
+    @staticmethod
+    def number_regex():
+        pattern = re.compile(r'')
+        return pattern
+    
+    @staticmethod
+    def operator_regex():
+        pattern = re.compile(r'')
+        return pattern
+    
+    @staticmethod
+    def keywords_regex():
+        return re.compile(r'\b(' + '|'.join(Yaml.keywords()) + r')\b')
+    
+    @staticmethod
+    def remove_comments(source_code: str, isList: bool = False) -> str:
+        result = []
+        for match in Yaml.comment_regex().finditer(source_code):
+            if match.group('noncomment'):
+                result.append(match.group('noncomment'))
+        if isList:
+            return result
+        return ''.join(result)
+
 
     @staticmethod
     def remove_keywords(source: str):
-        keywords = Kotlin.keywords()
-        pattern = r'\b(' + '|'.join(keywords) + r')\b'
-  
-        return re.sub(re.compile(pattern), '', source)
+        return re.sub(re.compile(Yaml.keywords_regex()), '', source)
+    

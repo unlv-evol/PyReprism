@@ -1,7 +1,6 @@
 import re
 from PyReprism.utils import extension
 
-
 class Diff:
     def __init__():
         pass
