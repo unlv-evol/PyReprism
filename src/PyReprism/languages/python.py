@@ -17,7 +17,10 @@ class Python:
     
     @staticmethod
     def comment_regex():
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)', re.DOTALL | re.MULTILINE)
+        # return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)', re.DOTALL | re.MULTILINE)
+        # pattern = re.compile(r'(?P<comment>#.*?$|"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')|(?P<noncomment>[^\n]*?(?=\n|$))', re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|[^#\'"]+)',re.DOTALL | re.MULTILINE)
+        return pattern
     
     @staticmethod
     def number_regex():
@@ -35,6 +38,7 @@ class Python:
     
     @staticmethod
     def remove_comments(source_code: str, isList: bool = False) -> str:
+        return Python.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
         result = []
         for match in Python.comment_regex().finditer(source_code):
             if match.group('noncomment'):
