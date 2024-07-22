@@ -21,7 +21,6 @@ class Vbnet:
         pattern = re.compile(r'(?P<comment>\'.*?$)|(?P<noncomment>[^\'\n]*[^\n]*)',re.MULTILINE)
         return pattern
 
-    
     @staticmethod
     def number_regex():
         pattern = re.compile(r'')
