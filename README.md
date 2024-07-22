@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
+![PyPI - Downloads](https://img.shields.io/pypi/dd/PyReprism)
 # PyReprism
 
 PyReprism is a suite of essential methods designed for common preprocessing tasks in code clone detection research.

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.0.13"
+version = "0.0.1"
 authors = [
   { name= "UNLV EVOL LAB", email="ogenrwot@unlv.nevada.edu" },
 ]
@@ -15,6 +15,7 @@ readme = "README.md"
 requires-python = ">=3.6"
 classifiers = [
     "Environment :: Console",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3.6",
