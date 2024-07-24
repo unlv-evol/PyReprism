@@ -17,9 +17,8 @@ class Python:
     
     @staticmethod
     def comment_regex():
-        # return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)', re.DOTALL | re.MULTILINE)
-        # pattern = re.compile(r'(?P<comment>#.*?$|"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')|(?P<noncomment>[^\n]*?(?=\n|$))', re.MULTILINE)
-        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|[^#\'"]+)',re.DOTALL | re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>#.*?$)|'r'(?P<multilinecomment1>""".*?""")|'r'(?P<multilinecomment2>\'\'\'.*?\'\'\')|'r'(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)',re.DOTALL | re.MULTILINE)
+        # pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|[^#\'"]+)',re.DOTALL | re.MULTILINE)
         return pattern
     
     @staticmethod

@@ -18,8 +18,7 @@ class TestPython:
     
         expected_output = '''
         def greet():
-            """ This is a docstring
-            that spans multiple lines """
+            
             print("Hello, World!")
         '''
 
@@ -27,4 +26,27 @@ class TestPython:
     
         assert output == expected_output.strip()
         print("Test remove_comments passed!")
+
+    @staticmethod    
+    def test_remove_comments_two():
+        source_code = """
+        # single line comment
+        x = 5 + 6
+        '''
+        multiline
+        comment
+        '''
+        print(x)
+        """
+    
+        expected_output = '''
+        x = 5 + 6
+        
+        print(x)
+        '''
+
+        output = Python.remove_comments(source_code)
+    
+        assert output == expected_output.strip()
+        print("Test remove_comments_two passed!")
        
