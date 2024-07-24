@@ -13,6 +13,7 @@ Use case 1: Removing comments
 ```python
 
 from PyReprism.languages import Python
+# from PyReprism.languages import Java
 
 source = """
 # single line comment
@@ -24,7 +25,7 @@ comment
 print(x)
 """
 
-source =''.join(Python.remove_comments(source))
+source = Python.remove_comments(source)
 ```
 
 Use case 2: Removing whitespaces 
@@ -40,7 +41,7 @@ comment
 print(x)
 """
 
-source =''.join(Normalizer.remove_whitespaces(source))
+source = Normalizer.remove_whitespaces(source)
 ```
 
 Read the [docs]() for more usage examples. -- Coming soon!!
