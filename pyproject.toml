@@ -5,8 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "PyReprism"
 dynamic = ["version"]
-version.attr = "PyReprism.__version__"
 [tool.setuptools.dynamic]
+version = { attr = "src.PyReprism.__version__" }
 authors = [
   { name= "UNLV EVOL LAB", email="ogenrwot@unlv.nevada.edu" },
 ]
