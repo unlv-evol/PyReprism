@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "PyReprism"
-copyright = "2024, Read the Docs core team"
+copyright = "2024, UNLV EVOL LAB"
 author = "UNLV EVOL LAB"
 
 
