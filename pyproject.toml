@@ -4,10 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.0.2"
+dynamic = ["version"]
+version.attr = "PyReprism.__version__"
+[tool.setuptools.dynamic]
 authors = [
   { name= "UNLV EVOL LAB", email="ogenrwot@unlv.nevada.edu" },
 ]
+
 license={file="LICENSE" }
 python_requires = ">=3.5"
 description = "Framework for Source Code Preprocessing"
