@@ -115,7 +115,6 @@ from .pure import *
 from .q import *
 from .qore import * 
 from .r import * 
-from .r import * 
 from .reason import * 
 from .renpy import * 
 from .rest import * 
