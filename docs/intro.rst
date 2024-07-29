@@ -4,7 +4,7 @@
 Overview / Install
 ==================
 
-PyReprism is a Python framework that helps researchers and developers the task of source code preprocessing. With PyReprism, you can easily match, count, and remove comments, whitespaces, operators, numbers and other language specific constructs from over 150 programming languages and file extension.
+PyReprism is a Python framework that helps researchers and developers the task of source code preprocessing. With PyReprism, you can easily match, extract, count, and remove comments, whitespaces, operators, numbers and other language specific constructs from over 150 programming languages and file extension.
 
 
 Requirements
@@ -25,7 +25,7 @@ Installing PyReprism is easily done using `pip`_. Assuming it is installed, just
 
 .. sourcecode:: none
 
-    # pip install PyReprism
+    $ pip install PyReprism
 
 Source Code
 ===========

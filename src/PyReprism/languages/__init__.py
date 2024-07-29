@@ -1,3 +1,4 @@
+__version__ = "0.0.3"
 from .python import *
 from .java import *
 from .c import *
