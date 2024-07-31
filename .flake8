@@ -2,5 +2,6 @@
 show-source = True
 count = True
 statistics = True
-max-line-length = 150
-exclude = .github,venv,build,dist,docs,test-repos,.venv,tmp.py
+; max-line-length = 150
+ignore = E501
+exclude = .github,venv,build,dist,docs,.venv,src/tests
