@@ -9,12 +9,12 @@ class Bro:
     @staticmethod
     def file_extension() -> str:
         return extension.bro
-    
+
     @staticmethod
     def keywords() -> list:
-         keyword = 'break|next|continue|alarm|using|of|add|delete|export|print|return|schedule|when|timeout|addr|any|bool|count|double|enum|file|int|interval|pattern|opaque|port|record|set|string|subnet|table|time|vector|for|if|else|in|module|function|load(?:-(?:sigs|plugin))?|unload|prefixes|ifn?def|else|(?:end)?if|DIR|FILENAME))|(?:&?(?:redef|priority|log|optional|default|add_func|delete_func|expire_func|read_expire|write_expire|create_expire|synchronized|persistent|rotate_interval|rotate_size|encrypt|raw_output|mergeable|group|error_handler|type_column'.split('|')
-         return keyword
-    
+        keyword = 'break|next|continue|alarm|using|of|add|delete|export|print|return|schedule|when|timeout|addr|any|bool|count|double|enum|file|int|interval|pattern|opaque|port|record|set|string|subnet|table|time|vector|for|if|else|in|module|function|load(?:-(?:sigs|plugin))?|unload|prefixes|ifn?def|else|(?:end)?if|DIR|FILENAME))|(?:&?(?:redef|priority|log|optional|default|add_func|delete_func|expire_func|read_expire|write_expire|create_expire|synchronized|persistent|rotate_interval|rotate_size|encrypt|raw_output|mergeable|group|error_handler|type_column'.split('|')
+        return keyword
+
     @staticmethod
     def comment_regex():
         pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]*)',re.MULTILINE)
@@ -24,16 +24,16 @@ class Bro:
     def number_regex():
         pattern = re.compile(r'\b0x[\da-f]+\b|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?')
         return pattern
-    
+
     @staticmethod
     def operator_regex():
         pattern = re.compile(r'--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&|\|\|?|\?|\*|\/|~|\^|%')
         return pattern
-    
+
     @staticmethod
     def keywords_regex():
         return re.compile(r'\b(' + '|'.join(Bro.keywords()) + r')\b')
-    
+
     @staticmethod
     def remove_comments(source_code: str, isList: bool = False) -> str:
         result = []
@@ -47,4 +47,3 @@ class Bro:
     @staticmethod
     def remove_keywords(source: str):
         return re.sub(re.compile(Bro.keywords_regex()), '', source)
-    
