@@ -9,7 +9,7 @@ class Ocaml:
     @staticmethod
     def file_extension() -> str:
         return extension.ocaml
- 
+
     @staticmethod
     def keywords() -> list:
         keyword = ''.split('|')

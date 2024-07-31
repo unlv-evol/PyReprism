@@ -11,5 +11,5 @@ class Normalizer:
 
     @staticmethod
     def remove_whitespaces(source: str):
-        pattern = re.sub(Normalizer.whitespaces_regex(), '', source).strip()
-        return pattern
+        pattern = re.sub(Normalizer.whitespaces_regex(), '', source)
+        return pattern.strip()
