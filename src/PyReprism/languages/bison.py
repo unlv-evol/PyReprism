@@ -12,8 +12,9 @@ class Bison:
 
     @staticmethod
     def keywords() -> list:
-        keyword = '%\w+'.split('|')
-        return keyword
+        # keyword = '%\w+'.split('|')
+        # return keyword
+        pass
 
     @staticmethod
     def comment_regex():

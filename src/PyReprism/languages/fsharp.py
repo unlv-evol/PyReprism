@@ -12,8 +12,8 @@ class FSharp:
 
     @staticmethod
     def keywords() -> list:
-         keyword = ''.split('|')
-         return keyword
+        keyword = ''.split('|')
+        return keyword
 
     @staticmethod
     def comment_regex():

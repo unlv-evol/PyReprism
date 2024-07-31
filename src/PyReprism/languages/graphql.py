@@ -24,7 +24,7 @@ class GraphSql:
     def number_regex():
         pattern = re.compile(r'')
         return pattern
-    
+
     @staticmethod
     def operator_regex():
         pattern = re.compile(r'')

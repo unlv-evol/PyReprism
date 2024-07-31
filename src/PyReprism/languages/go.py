@@ -9,13 +9,12 @@ class Go:
     @staticmethod
     def file_extension() -> str:
         return extension.Go
-    
+
     @staticmethod
     def keywords() -> list:
         keyword = 'break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go(?:to)?|if|import|interface|map|package|range|return|select|struct|switch|type|var|bool|byte|complex(?:64|128)|error|float32|float64|rune|string|u?int(?:8|16|32|64)?|uintptr|append|cap|close|complex|copy|delete|imag|len|make|new|panic|print|println|real|recover|iota|nil|true|false'.split('|')
-        
         return keyword
-    
+
     @staticmethod
     def comment_regex():
         pattern = re.compile(r'(?P<comment>//.*?$|/\*.*?\*/|/\*.*?$|^.*?\*/|[{}]+)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)', re.DOTALL | re.MULTILINE)

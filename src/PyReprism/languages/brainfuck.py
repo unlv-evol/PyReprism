@@ -12,8 +12,9 @@ class BrainFuck:
 
     @staticmethod
     def keywords() -> list:
-        keyword = '\S+'.split('|')
-        return keyword
+        # keyword = '\S+'.split('|')
+        # return keyword
+        pass
 
     @staticmethod
     def comment_regex():

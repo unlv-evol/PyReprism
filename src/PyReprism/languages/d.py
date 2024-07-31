@@ -47,4 +47,3 @@ class D:
     @staticmethod
     def remove_keywords(source: str):
         return re.sub(re.compile(D.keywords_regex()), '', source)
-    

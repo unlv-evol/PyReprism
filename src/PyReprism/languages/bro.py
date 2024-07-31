@@ -17,7 +17,7 @@ class Bro:
 
     @staticmethod
     def comment_regex():
-        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]*)',re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]*)', re.MULTILINE)
         return pattern
 
     @staticmethod

@@ -9,7 +9,7 @@ class Bash:
     @staticmethod
     def file_extension() -> str:
         return extension.bash
-    
+
     @staticmethod
     def keywords() -> list:
         keyword = ''.split('|')
