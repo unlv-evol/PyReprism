@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Base(ABC):
 
     @staticmethod
@@ -26,5 +27,4 @@ class Base(ABC):
     @abstractmethod
     def file_extension() -> str:
         pass
-
 
