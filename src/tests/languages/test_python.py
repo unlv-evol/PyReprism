@@ -4,7 +4,7 @@ class TestPython:
     @staticmethod
     def test_extension():
         ext = Python.file_extension()
-        assert(ext) == ".py"
+        assert ext == ".py"
 
     @staticmethod
     def test_remove_comments():

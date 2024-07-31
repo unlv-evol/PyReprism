@@ -31,6 +31,14 @@ print(x)
 """
 
 source = Python.remove_comments(source)
+
+# expected output
+
+x = 5 + 6
+
+
+print(x)
+
 ```
 
 Use case 2: Removing whitespaces 
@@ -42,9 +50,15 @@ x = 5 + 6
 
 
 print(x)
+
 """
 
+
 source = Normalizer.remove_whitespaces(source)
+
+# expected output
+x=5+6
+print(x)
 ```
 
 Read the [docs](https://pyreprism.readthedocs.io) for more usage examples. 
@@ -70,5 +84,7 @@ Then, install the requirements:
 ```shell
 $ pip install -r requirements.txt
 ```
+For more information on how to contribute, read our [contributing guidelines](CONTRIBUTING.md).
+
 ## Issues
 If you experience any issue, feel free to report it here. We are developing the issue reporting guidelines which will be available soon.
