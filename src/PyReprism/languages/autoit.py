@@ -17,7 +17,7 @@ class Autoit:
 
     @staticmethod
     def comment_regex():
-        pattern = re.compile(r'(?P<comment>;.*?$|#cs[\s\S]*?#ce|#cs.*?$|^.*?#ce)|(?P<noncomment>[^;#]*[^\n]*)',re.DOTALL | re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>;.*?$|#cs[\s\S]*?#ce|#cs.*?$|^.*?#ce)|(?P<noncomment>[^;#]*[^\n]*)', re.DOTALL | re.MULTILINE)
         return pattern
 
     @staticmethod

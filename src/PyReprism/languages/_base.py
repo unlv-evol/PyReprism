@@ -27,4 +27,3 @@ class Base(ABC):
     @abstractmethod
     def file_extension() -> str:
         pass
-

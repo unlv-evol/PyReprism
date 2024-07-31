@@ -9,7 +9,7 @@ class Asciidoc:
     @staticmethod
     def file_extension() -> str:
         return extension.asciidoc
-    
+
     @staticmethod
     def keywords() -> list:
         keyword = ''.split('|')

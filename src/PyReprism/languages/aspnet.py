@@ -9,7 +9,7 @@ class Aspnet:
     @staticmethod
     def file_extension() -> str:
         return extension.aspnet
-    
+
     @staticmethod
     def keywords() -> list:
         keyword = 'Assembly|Control|Implements|Import|Master(?:Type)?|OutputCache|Page|PreviousPageType|Reference|Register'.split('|')
