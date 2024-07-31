@@ -8,4 +8,5 @@ class TestNormalizer:
         str = "This This"
         expected = "ThisThis"
         data = Normalizer.remove_whitespaces(str)
-        assert (data) == expected
+        assert data == expected
+        

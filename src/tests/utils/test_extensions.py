@@ -24,7 +24,7 @@ class TestExtension:
         assert extension.brainfuck == '.bf'
         assert extension.bro == '.bro'
         assert extension.c == '.c'
-        assert extension.clike == '.c'  
+        assert extension.clike == '.c'
         assert extension.clojure == '.clj'
         assert extension.coffeescript == '.coffee'
         assert extension.cpp == '.cpp'
@@ -36,7 +36,7 @@ class TestExtension:
         assert extension.d == '.d'
         assert extension.dart == '.dart'
         assert extension.diff == '.diff'
-        assert extension.django == '.py' 
+        assert extension.django == '.py'
         assert extension.docker == 'Dockerfile'
         assert extension.eiffel == '.e'
         assert extension.elixir == '.ex'
@@ -153,3 +153,4 @@ class TestExtension:
         assert extension.xojo == '.xojo'
         assert extension.yaml == '.yaml'
         assert extension.yml == '.yml'
+        
