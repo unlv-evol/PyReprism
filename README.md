@@ -3,6 +3,7 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism.svg?type=shield&issueType=license)](https://app.fossa.com/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism?ref=badge_shield&issueType=license)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism.svg?type=shield&issueType=security)](https://app.fossa.com/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism?ref=badge_shield&issueType=security)
 [![Documentation Status](https://readthedocs.org/projects/pyreprism/badge/?version=latest)](https://pyreprism.readthedocs.io/en/latest/?badge=latest)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/PyReprism)
 
 
 # PyReprism
@@ -87,4 +88,4 @@ $ pip install -r requirements.txt
 For more information on how to contribute, read our [contributing guidelines](CONTRIBUTING.md).
 
 ## Issues
-If you experience any issue, feel free to report it here. We are developing the issue reporting guidelines which will be available soon.
+If you experience any issue, feel free to report it.
