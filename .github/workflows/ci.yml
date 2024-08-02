@@ -8,6 +8,8 @@ on:
       - main
 
 jobs:
+  publish:
+    name: "Lint, test and upload to codecov"
     runs-on: ubuntu-latest
     steps:
       - name: Check out the code
