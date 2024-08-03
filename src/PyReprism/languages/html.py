@@ -32,17 +32,11 @@ class HTML:
 
     @staticmethod
     def keywords_regex():
-        return re.compile(r'\b(' + '|'.HTMLoin(HTML.keywords()) + r')\b')
+        return re.compile(r'\b(' + '|'.join(HTML.keywords()) + r')\b')
 
     @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in HTML.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.HTMLoin(result)
+    def remove_comments(source_code: str) -> str:
+        return HTML.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
 
     @staticmethod
     def remove_keywords(source: str):

@@ -3,7 +3,7 @@ from PyReprism.utils import extension
 
 
 class ActionScript:
-    def __init__():
+    def __init__(self):
         pass
 
     @staticmethod
@@ -17,7 +17,7 @@ class ActionScript:
 
     @staticmethod
     def comment_regex():
-        pattern = re.compile(r'(?P<comment>^\*.*?$|".*?$|\(\*[\s\S]*?\*\)|\(\*.*?$|^.*?\*\))|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^*"\'"]*)', re.DOTALL | re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
         return pattern
 
     @staticmethod
@@ -35,14 +35,8 @@ class ActionScript:
         return re.compile(r'\b(' + '|'.join(ActionScript.keywords()) + r')\b')
 
     @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in ActionScript.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    def remove_comments(source_code: str) -> str:
+        return ActionScript.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
 
     @staticmethod
     def remove_keywords(source: str):

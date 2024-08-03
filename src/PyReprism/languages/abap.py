@@ -3,7 +3,7 @@ from PyReprism.utils import extension
 
 
 class Abap:
-    def __init__():
+    def __init__(self):
         pass
 
     @staticmethod
@@ -36,14 +36,14 @@ class Abap:
         return re.compile(r'\b(' + '|'.join(Abap.keywords()) + r')\b')
 
     @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    def remove_comments(source_code: str) -> str:
         result = []
         for match in Abap.comment_regex().finditer(source_code):
             if match.group('noncomment'):
                 result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+        # if isList:
+        #     return result
+        return ''.join(result).strip()
 
     @staticmethod
     def remove_keywords(source: str):
