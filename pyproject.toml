@@ -4,7 +4,6 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.0.2"
 authors = [
   { name= "UNLV EVOL LAB", email="ogenrwot@unlv.nevada.edu" },
 ]
@@ -24,6 +23,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[tool.hatch.version.sources.git]
+tag-pattern = "v*"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/PyReprism"]
