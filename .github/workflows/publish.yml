@@ -1,0 +1,38 @@
+name: Publish Python 🐍 distributions 📦 to PyPI
+on:
+  push:
+    tags:
+      - 'v*' 
+    branches:
+      - main 
+      - stable
+
+jobs:
+  publish:
+    name: "Build and upload to pypi"
+    runs-on: "ubuntu-latest"
+    # environment:
+    #   name: pypi
+    #   url: https://pypi.org/project/PyReprism/
+    # permissions:
+    #   id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install hatchling twine
+      - name: Build app
+        run: |
+          hatch build
+      - name: Publish distribution 📦 to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+        # run: twine upload dist/*

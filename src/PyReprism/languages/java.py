@@ -3,7 +3,7 @@ from PyReprism.utils import extension
 
 
 class Java:
-    def __init__():
+    def __init__(self):
         pass
 
     @staticmethod
@@ -17,7 +17,7 @@ class Java:
 
     @staticmethod
     def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*.*?\*/|/\*.*?$|^.*?\*/|[{}]+)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"{}]*)', re.DOTALL | re.MULTILINE)
+        pattern = re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
         return pattern
 
     @staticmethod
@@ -35,15 +35,9 @@ class Java:
         return re.compile(r'\b(' + '|'.join(Java.keywords()) + r')\b')
 
     @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Java.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    def remove_comments(source_code: str) -> str:
+        return Java.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
 
     @staticmethod
     def remove_keywords(source: str):
-        return re.sub(re.compile(Java.keywords_regex()), '', source)
+        return re.sub(re.compile(Java.keywords_regex()), '', source).strip()
