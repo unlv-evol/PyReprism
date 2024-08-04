@@ -4,6 +4,8 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism.svg?type=shield&issueType=security)](https://app.fossa.com/projects/custom%2B46484%2Fgithub.com%2Funlv-evol%2FPyReprism?ref=badge_shield&issueType=security)
 [![Documentation Status](https://readthedocs.org/projects/pyreprism/badge/?version=latest)](https://pyreprism.readthedocs.io/en/latest/?badge=latest)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/PyReprism)
+![CI](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+![Publish](https://github.com/github/docs/actions/workflows/publish.yml/badge.svg)
 <!-- [![codecov](https://codecov.io/gh/unlv-evol/PyReprism/graph/badge.svg?token=J2JV31837H)](https://codecov.io/gh/unlv-evol/PyReprism) -->
 
 # PyReprism
