@@ -6,7 +6,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/PyReprism)
 ![CI](https://github.com/unlv-evol/PyReprism/actions/workflows/ci.yml/badge.svg)
 ![Publish](https://github.com/unlv-evol/PyReprism/actions/workflows/publish.yml/badge.svg)
-<!-- [![codecov](https://codecov.io/gh/unlv-evol/PyReprism/graph/badge.svg?token=J2JV31837H)](https://codecov.io/gh/unlv-evol/PyReprism) -->
+[![codecov](https://codecov.io/gh/unlv-evol/PyReprism/graph/badge.svg?token=J2JV31837H)](https://codecov.io/gh/unlv-evol/PyReprism)
 
 # PyReprism
 
