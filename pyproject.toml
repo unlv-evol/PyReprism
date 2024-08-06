@@ -12,11 +12,11 @@ authors = [
 license={file="LICENSE" }
 python_requires = ">=3.5"
 description = "Framework for Source Code Preprocessing"
-readme = "README.md"
+readme = "PyReprism is a Python framework that helps researchers and developers the task of source code preprocessing. With PyReprism, you can easily match, extract, count, and remove comments, whitespaces, operators, numbers and other language specific constructs from over 150 programming languages and file extensions."
 requires-python = ">=3.6"
 classifiers = [
     "Environment :: Console",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Stable,
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
@@ -43,4 +43,5 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/unlv-evol/PyReprism"
+Documentation = "https://pyreprism.readthedocs.io"
 Issues = "https://github.com/unlv-evol/PyReprism/issues"
