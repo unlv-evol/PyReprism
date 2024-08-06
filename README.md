@@ -7,10 +7,13 @@
 ![CI](https://github.com/unlv-evol/PyReprism/actions/workflows/ci.yml/badge.svg)
 ![Publish](https://github.com/unlv-evol/PyReprism/actions/workflows/publish.yml/badge.svg)
 [![codecov](https://codecov.io/gh/unlv-evol/PyReprism/graph/badge.svg?token=J2JV31837H)](https://codecov.io/gh/unlv-evol/PyReprism)
+![PyPI - Version](https://img.shields.io/pypi/v/pyreprism)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/unlv-evol/pyreprism/main)
+
 
 # PyReprism
 
-PyReprism is a suite of essential methods designed for common preprocessing tasks in code clone detection research.
+PyReprism is a Python framework that helps researchers and developers the task of source code preprocessing. With PyReprism, you can easily match, extract, count, and remove comments, whitespaces, operators, numbers and other language specific constructs from over **150 programming languages and file extensions**.
 
 ## Install
 ```shell
