@@ -30,7 +30,7 @@ class C:
     @staticmethod
     def comment_regex() -> re.Pattern:
         """
-        Compile and return a regular expression pattern to identify different types of comments and non-comment code in Python source files.
+        Compile and return a regular expression pattern to identify different types of comments and non-comment code in C source files.
 
         :return: A compiled regex pattern with named groups to match single-line comments, multiline comments, and non-comment code elements.
         :rtype: re.Pattern
@@ -104,7 +104,7 @@ class C:
     @staticmethod
     def remove_keywords(source: str) -> str:
         """
-        Remove all Python keywords from the provided source code string.
+        Remove all C keywords from the provided source code string.
 
         :param str source: The source code string from which to remove C keywords.
         :return: The source code string with all C keywords removed.
