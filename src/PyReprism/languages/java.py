@@ -30,7 +30,7 @@ class Java:
     @staticmethod
     def comment_regex() -> re.Pattern:
         """
-        Compile and return a regular expression pattern to identify different types of comments and non-comment code in Python source files.
+        Compile and return a regular expression pattern to identify different types of comments and non-comment code in Java source files.
 
         :return: A compiled regex pattern with named groups to match single-line comments, multiline comments, and non-comment code elements.
         :rtype: re.Pattern
@@ -104,7 +104,7 @@ class Java:
     @staticmethod
     def remove_keywords(source: str) -> str:
         """
-        Remove all Python keywords from the provided source code string.
+        Remove all Java keywords from the provided source code string.
 
         :param str source: The source code string from which to remove Java keywords.
         :return: The source code string with all Java keywords removed.
