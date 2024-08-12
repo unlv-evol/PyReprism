@@ -28,7 +28,7 @@ class CPP:
         return keyword
 
     @staticmethod
-    def comment_regex():
+    def comment_regex() -> re.Pattern:
         """
         Compile and return a regular expression pattern to identify different types of comments and non-comment code in C source files.
 
@@ -39,7 +39,7 @@ class CPP:
         return pattern
 
     @staticmethod
-    def number_regex():
+    def number_regex() -> re.Pattern:
         """
         Compile and return a regular expression pattern to identify numeric literals in C++ code.
 
@@ -50,7 +50,7 @@ class CPP:
         return pattern
 
     @staticmethod
-    def operator_regex():
+    def operator_regex() -> re.Pattern:
         """
         Compile and return a regular expression pattern to identify C++ operators.
 
@@ -61,7 +61,7 @@ class CPP:
         return pattern
 
     @staticmethod
-    def keywords_regex():
+    def keywords_regex() -> re.Pattern:
         """
         Return a list of C++ keywords and built-in functions.
 
@@ -102,7 +102,7 @@ class CPP:
         return CPP.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
 
     @staticmethod
-    def remove_keywords(source: str):
+    def remove_keywords(source: str) -> str:
         """
         Remove all C++ keywords from the provided source code string.
 

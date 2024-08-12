@@ -3,6 +3,9 @@ from PyReprism.utils import extension
 
 
 class Python:
+    """
+    This is the class for processing Python source code
+    """
     def __init__(self):
         pass
 
