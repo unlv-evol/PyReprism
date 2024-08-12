@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/unlv-evol/PyReprism/graph/badge.svg?token=J2JV31837H)](https://codecov.io/gh/unlv-evol/PyReprism)
 ![PyPI - Version](https://img.shields.io/pypi/v/pyreprism)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/unlv-evol/pyreprism/main)
-
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://pypi.org/project/PyReprism//)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://pypi.org/project/PyReprism/)
 
 # PyReprism
 
