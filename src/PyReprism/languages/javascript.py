@@ -101,6 +101,7 @@ class JavaScript:
         :return: The source code with all comments removed.
         :rtype: str
         """
+        return JavaScript.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
         result = []
         for match in JavaScript.comment_regex().finditer(source_code):
             if match.group('noncomment'):

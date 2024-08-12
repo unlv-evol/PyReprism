@@ -47,7 +47,7 @@ class Rust:
         return re.compile(r'\b(?:true|false|None)\b')
 
     @staticmethod
-    def rust_delimiters_regex() -> re.Pattern:
+    def delimiters_regex() -> re.Pattern:
         """
         Compile and return a regular expression pattern to identify Rust language delimiters.
 
