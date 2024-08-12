@@ -1,0 +1,9 @@
+pytest
+flake8
+pytest-cov
+build
+twine
+hatchling
+hatch-vcs
+sphinx
+sphinx_rtd_theme
