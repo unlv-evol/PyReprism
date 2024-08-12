@@ -33,15 +33,13 @@ class Go:
     @staticmethod
     def keywords_regex() -> re.Pattern:
         return re.compile(r'\b(' + '|'.join(Go.keywords()) + r')\b')
-    
+
     @staticmethod
     def delimiters_regex() -> re.Pattern:
         """
         Compile and return a regular expression pattern to identify Go delimiters.
 
-        This function generates a regular expression that matches Go language delimiters, 
-        which include parentheses `()`, brackets `[]`, braces `{}`, commas `,`, colons `:`, 
-        periods `.`, semicolons `;`, and the ellipsis `...`.
+        This function generates a regular expression that matches Go language delimiters, which include parentheses `()`, brackets `[]`, braces `{}`, commas `,`, colons `:`, periods `.`, semicolons `;`, and the ellipsis `...`.
 
         :return: A compiled regex pattern to match Go delimiters.
         :rtype: re.Pattern
@@ -53,8 +51,7 @@ class Go:
         """
         Compile and return a regular expression pattern to identify Go boolean literals.
 
-        This function generates a regular expression that matches the Go boolean literals 
-        `true`, `false`, and the special constant `nil`.
+        This function generates a regular expression that matches the Go boolean literals `true`, `false`, and the special constant `nil`.
 
         :return: A compiled regex pattern to match Go boolean literals and `nil`.
         :rtype: re.Pattern

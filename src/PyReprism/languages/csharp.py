@@ -35,7 +35,40 @@ class CSharp:
         return re.compile(r'\b(' + '|'.join(CSharp.keywords()) + r')\b')
 
     @staticmethod
+    def boolean_regex() -> re.Pattern:
+        """
+        Compile and return a regular expression pattern to identify C# boolean literals.
+
+        This function generates a regular expression that matches the C# boolean literals `true`, `false`, and the special constant `null`.
+
+        :return: A compiled regex pattern to match C# boolean literals and `null`.
+        :rtype: re.Pattern
+        """
+        return re.compile(r'\b(?:true|false|null)\b', re.IGNORECASE)
+
+    @staticmethod
+    def delimiters_regex() -> re.Pattern:
+        """
+        Compile and return a regular expression pattern to identify C# delimiters.
+
+        This function generates a regular expression that matches C# language delimiters, which include parentheses `()`, brackets `[]`, braces `{}`, commas `,`, colons `:`, periods `.`, semicolons `;`, at symbols `@`, angle brackets `<`, `>`, and the question mark `?`.
+
+        :return: A compiled regex pattern to match C# delimiters.
+        :rtype: re.Pattern
+        """
+        return re.compile(r'[()\[\]{}.,:;@<>?]')
+
+    @staticmethod
     def remove_comments(source_code: str, isList: bool = False) -> str:
+        """
+        Remove comments from the provided Python source code string.
+
+        :param str source_code: The Python source code from which to remove comments.
+        :param bool isList: (Optional) A flag indicating if the input is a list of source code lines. This parameter is not used in the function logic.
+        :return: The source code with all comments removed.
+        :rtype: str
+        """
+        return CSharp.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
         result = []
         for match in CSharp.comment_regex().finditer(source_code):
             if match.group('noncomment'):

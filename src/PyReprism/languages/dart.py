@@ -35,7 +35,32 @@ class Dart:
         return re.compile(r'\b(' + '|'.join(Dart.keywords()) + r')\b')
 
     @staticmethod
+    def delimiters_regex() -> re.Pattern:
+        """
+        Compile and return a regular expression pattern to identify Dart language delimiters.
+
+        This function generates a regular expression that matches Dart language delimiters, which include parentheses `()`, brackets `[]`, braces `{}`, commas `,`, colons `:`, periods `.`, semicolons `;`, and angle brackets `<`, `>`.
+
+        :return: A compiled regex pattern to match Dart delimiters.
+        :rtype: re.Pattern
+        """
+        return re.compile(r'[()\[\]{}.,:;<>]')
+
+    @staticmethod
+    def boolean_regex() -> re.Pattern:
+        """
+        Compile and return a regular expression pattern to identify Dart boolean literals.
+
+        This function generates a regular expression that matches the Dart boolean literals `true`, `false`, and the special constant `null`.
+
+        :return: A compiled regex pattern to match Dart boolean literals and `null`.
+        :rtype: re.Pattern
+        """
+        return re.compile(r'\b(?:true|false|null)\b')
+
+    @staticmethod
     def remove_comments(source_code: str, isList: bool = False) -> str:
+        return Dart.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
         result = []
         for match in Dart.comment_regex().finditer(source_code):
             if match.group('noncomment'):
