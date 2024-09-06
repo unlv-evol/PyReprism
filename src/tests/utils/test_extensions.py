@@ -134,6 +134,7 @@ class TestExtension:
         assert extension.smalltalk == '.st'
         assert extension.smarty == '.tpl'
         assert extension.soy == '.soy'
+        assert extension.sql == '.sql'
         assert extension.stylus == '.styl'
         assert extension.swift == '.swift'
         assert extension.tcl == '.tcl'
