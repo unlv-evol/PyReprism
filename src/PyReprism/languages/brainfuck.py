@@ -12,9 +12,8 @@ class BrainFuck:
 
     @staticmethod
     def keywords() -> list:
-        # keyword = '\S+'.split('|')
-        # return keyword
-        pass
+        keyword = ["<|>"]
+        return keyword
 
     @staticmethod
     def comment_regex():
@@ -37,6 +36,16 @@ class BrainFuck:
 
     @staticmethod
     def remove_comments(source_code: str, isList: bool = False) -> str:
+        """
+        Remove comments from the provided Brainfuck source code string.
+
+        :param str source_code: The Brainfuck source code from which to remove comments.
+        :param bool isList: (Optional) A flag indicating if the input is a list of source code lines. This parameter is not used in the function logic.
+        :return: The source code with all comments removed.
+        :rtype: str
+        """
+        return BrainFuck.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
+
         result = []
         for match in BrainFuck.comment_regex().finditer(source_code):
             if match.group('noncomment'):
