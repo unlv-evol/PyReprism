@@ -1,6 +1,51 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
+
+
+@LanguageRegistry.register
+class Python(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
+        return extension.python
+
+    @classmethod
+    def keywords(cls) -> list:
+        return 'as|assert|async|await|break|class|continue|def|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|nonlocal|pass|print|raise|return|try|while|with|yield|__import__|abs|all|any|apply|ascii|basestring|bin|bool|buffer|bytearray|bytes|case|callable|chr|classmethod|cmp|coerce|compile|complex|delattr|dict|dir|divmod|enumerate|eval|execfile|file|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|intern|isinstance|issubclass|iter|len|list|locals|long|match|map|max|memoryview|min|next|object|oct|open|ord|pow|property|range|raw_input|reduce|reload|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|unichr|unicode|vars|xrange|zip|True|False|None'.split('|')
+
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        # Pattern captures: single-line '#', triple-quoted triple double or triple single, and noncomment segments
+        return re.compile(r"(?P<comment>#.*?$)|(?P<multilinecomment1>\"\"\".*?\"\"\")|(?P<multilinecomment2>''' .*?''')|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^#'\"]*)", re.DOTALL | re.MULTILINE)
+
+    @classmethod
+    def number_regex(cls) -> re.Pattern:
+        return re.compile(r'(?:\b(?=\d)|\B(?=\.))(?:0[bo])?(?:(?:\d|0x[\da-f])[\da-f]*\.?\d*|\.\d+)(?:e[+-]?\d+)?j?\b', re.IGNORECASE)
+
+    @classmethod
+    def operator_regex(cls) -> re.Pattern:
+        return re.compile(r'[-+%=]=?|!=|\*\*?=?|//?=?|<[<=>]?|>[=>]?|[&|^~]|\b(?:or|and|not)\b')
+
+    @classmethod
+    def delimiters_regex(cls) -> re.Pattern:
+        return re.compile(r'[()\[\]{}.,:;@]')
+
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False) -> str:
+        res = super().remove_comments(source_code, isList=isList)
+        if isList:
+            return res
+        return res.strip()
+
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return re.sub(cls.keywords_regex(), '', source)
+
+import re
+from PyReprism.utils import extension
+
 
 class Python:
     """
