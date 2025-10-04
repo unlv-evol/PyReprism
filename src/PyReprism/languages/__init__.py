@@ -1,147 +1,51 @@
 __version__ = "0.0.3"
-from .python import *
-from .java import *
-from .c import *
-from .csharp import *
-from .bash import *
-from .markup import *
-from .perl import *
-from .php import *
-from .ruby import *
-from .rust import *
-from .abap import *
-from .actionscript import * 
-from .ada import * 
-from .apacheconf import *
-from .apl import *
-from .applescript import *
-from .arduino import * 
-from .arff import * 
-from .asciidoc import * 
-from .asm6502 import * 
-from .aspnet import * 
-from .autohotkey import * 
-from .autoit import * 
-from .bash import * 
-from .basic import * 
-from .batch import * 
-from .bison import * 
-from .brainfuck import * 
-from .bro import * 
-from .clike import * 
-from .clojure import * 
-from .coffeescript import * 
-from .cpp import * 
-from .crystal import * 
-from .csp import * 
-from .css_extras import * 
-from .css import * 
-from .d import * 
-from .dart import * 
-from .diff import * 
-from .django import * 
-from .docker import * 
-from .eiffel import * 
-from .elixir import * 
-from .erb import * 
-from .erlang import * 
-from .flow import *
-from .fortran import *
-from .fsharp import *
-from .gedcom import *
-from .gherkin import *
-from .git import * 
-from .glsl import *
-from .go import *
-from .graphql import * 
-from .groovy import *
-from .haml import * 
-from .handlebars import * 
-from .haskell import *
-from .haxe import *
-from .hpkp import *
-from .hsts import *
-from .ichigojam import *
-from .icon import * 
-from .inform7 import *
-from .ini import *
-from .io import *
-from .j import *
-from .javascript import *
-from .jolie import *
-from .json import *
-from .jsx import *
-from .julia import *
-from .keyman import *
-from .kotlin import *
-from .latex import *
-from .less import *
-from .liquid import *
-from .livescript import *
-from .lolcode import *
-from .lua import * 
-from .makefile import * 
-from .markdown import * 
-from .markup_templating import *
-from .markup import *
-from .matlab import * 
-from .mel import * 
-from .mizar import *
-from .monkey import *
-from .n4js import *
-from .nasm import *
-from .nginx import * 
-from .nim import * 
-from .nix import * 
-from .nsis import * 
-from .objectivec import * 
-from .ocaml import * 
-from .opencl import * 
-from .oz import * 
-from .parigp import * 
-from .parser import * 
-from .pascal import *
-from .perl import * 
-from .php_extras import * 
-from .plsql import * 
-from .powershell import * 
-from .processing import * 
-from .prolog import * 
-from .properties import * 
-from .protobuf import * 
-from .pug import * 
-from .puppet import * 
-from .pure import *  
-from .q import *
-from .qore import * 
-from .r import * 
-from .reason import * 
-from .renpy import * 
-from .rest import * 
-from .rip import * 
-from .roboconf import * 
-from .sas import * 
-from .sass import * 
-from .scala import * 
-from .scheme import *
-from .scss import * 
-from .smalltalk import * 
-from .smarty import * 
-from .soy import * 
-from .stylus import * 
-from .swift import * 
-from .tcl import * 
-from .textile import * 
-from .tsx import * 
-from .twig import * 
-from .typescript import * 
-from .vbnet import * 
-from .velocity import * 
-from .verilog import * 
-from .vhdl import * 
-from .vim import * 
-from .visual_basic import * 
-from .wasam import * 
-from .xeora import * 
-from .xojo import * 
-from .yaml import *
+
+# Minimal lazy loader / registry bridge for language modules.
+import importlib
+from typing import Any
+
+from .registry import LanguageRegistry
+
+
+# Pre-declare an __all__ mapping of known language module names (optional).
+# Keep it small and let modules register themselves via LanguageRegistry.
+__all__ = [
+	# common names; modules register on import
+	'Python', 'JavaScript', 'CPP', 'C', 'Clike', 'Go', 'MatLab', 'Ruby', 'PHP', 'Bash'
+]
+
+
+def __getattr__(name: str) -> Any:
+	"""Lazy-load language module attribute by name.
+
+	Accessing e.g. `PyReprism.languages.Python` will import the submodule
+	`PyReprism.languages.python` and return the class object if present.
+	"""
+	# If already registered, return directly
+	cls = LanguageRegistry.get(name)
+	if cls:
+		return cls
+
+	# Try to import the submodule named by lowercasing the name
+	mod_name = name.lower()
+	try:
+		importlib.import_module(f'.{mod_name}', __name__)
+	except ModuleNotFoundError:
+		raise AttributeError(f"module {__name__} has no attribute {name}")
+
+	cls = LanguageRegistry.get(name)
+	if cls:
+		return cls
+	raise AttributeError(f"module {__name__} has no attribute {name}")
+
+
+def get_language_by_extension(ext: str):
+	"""Return the first registered language class that reports the given file extension."""
+	for name, cls in LanguageRegistry.all().items():
+		try:
+			if cls.file_extension() == ext:
+				return cls
+		except Exception:
+			continue
+	return None
+
