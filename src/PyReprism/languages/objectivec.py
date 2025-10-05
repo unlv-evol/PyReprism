@@ -1,49 +1,58 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class ObjectiveC:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class ObjectiveC(BaseLanguage):
+    """Objective-C language helpers (minimal migration to BaseLanguage).
+
+    Preserves the original comment-removal semantics (scalar vs list) and
+    provides compiled regex helpers for numbers/operators/delimiters.
+    """
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.objectivec
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'asm|typeof|inline|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|in|self|super)\b|(?:@interface|@end|@implementation|@protocol|@class|@public|@protected|@private|@property|@try|@catch|@finally|@throw|@synthesize|@dynamic|@selector'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # Keep C-family keywords; Objective-C @-directives are not suitable
+        # for word-boundary keyword removal (they include the '@' prefix).
+        return 'asm|typeof|inline|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|in|self|super'.split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/]*[^\n]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        # Capture // line comments and C-style block comments; provide a
+        # 'noncomment' group with the text to keep.
+        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/]*[^\n]*)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'(?:\b0x[\da-f]+|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?)[ful]*', re.IGNORECASE)
-        return pattern
+    @classmethod
+    def number_regex(cls) -> re.Pattern:
+        return re.compile(r'(?:\b0x[\da-f]+|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?)[ful]*', re.IGNORECASE)
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'-[->]?|\+\+?|!=?|<<?=?|>>?=?|==?|&&?|\|\|?|[~^%?*\/@]')
-        return pattern
+    @classmethod
+    def operator_regex(cls) -> re.Pattern:
+        return re.compile(r'-[->]?|\+\+?|!=?|<<?=?|>>?=?|==?|&&?|\|\|?|[~^%?*\/@]')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(ObjectiveC.keywords()) + r')\b', re.IGNORECASE)
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b', re.IGNORECASE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        # Preserve original behavior: only append non-empty noncomment groups.
         result = []
-        for match in ObjectiveC.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
+        for match in cls.comment_regex().finditer(source_code):
+            non = match.groupdict().get('noncomment')
+            if non:
+                result.append(non)
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(ObjectiveC.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return re.sub(cls.keywords_regex(), '', source)

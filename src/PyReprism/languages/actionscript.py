@@ -1,43 +1,40 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class ActionScript:
-    def __init__(self):
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class ActionScript(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.actionscript
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'as|break|case|catch|class|const|default|delete|do|else|extends|finally|for|function|if|implements|import|in|instanceof|interface|internal|is|native|new|null|package|private|protected|public|return|super|switch|this|throw|try|typeof|use|var|void|while|with|dynamic|each|final|get|include|namespace|native|override|set|static'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        return 'as|break|case|catch|class|const|default|delete|do|else|extends|finally|for|function|if|implements|import|in|instanceof|interface|internal|is|native|new|null|package|private|protected|public|return|super|switch|this|throw|try|typeof|use|var|void|while|with|dynamic|each|final|get|include|namespace|native|override|set|static'.split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        # Keep the original pattern that captures // and /* */ comments and preserves non-comment sequences
+        return re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'\b\d+\b')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'\b\d+\b')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'\+\+|--|(?:[+\-*\/%^]|&&?|\|\|?|<<?|>>?>?|[!=]=?)=?|[~?@]')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'\+\+|--|(?:[+\-*\/%^]|&&?|\|\|?|<<?|>>?>?|[!=]=?)=?|[~?@]')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(ActionScript.keywords()) + r')\b')
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False) -> str:
+        res = super().remove_comments(source_code, isList=isList)
+        if isList:
+            return res
+        return res.strip()
 
-    @staticmethod
-    def remove_comments(source_code: str) -> str:
-        return ActionScript.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(ActionScript.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return re.sub(cls.keywords_regex(), '', source)

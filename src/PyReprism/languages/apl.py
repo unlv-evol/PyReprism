@@ -1,49 +1,41 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Apl:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Apl(BaseLanguage):
+    """APL language helper.
+
+    This class provides minimal support for APL-like source files: file
+    extension metadata, comment matching, and a conservative list of common
+    APL primitives/operators for keyword removal. The keyword list is kept
+    intentionally small; we can move to a data file later if you want a
+    comprehensive set.
+    """
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.apl
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # A conservative set of commonly-used APL symbols / primitives.
+        return '⍝|⍴|⍳|⌈|⌊|⌿|⍟|∘|⍎|⍕'.split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>⍝.*?$)|(?P<noncomment>[^⍝]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        # APL uses the '⍝' glyph to start comments.
+        return re.compile(r'(?P<comment>⍝.*?$)|(?P<noncomment>[^⍝]*)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+    # Use BaseLanguage.number_regex and operator_regex by default.
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList=isList)
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Apl.keywords()) + r')\b')
-
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Apl.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Apl.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return super().remove_keywords(source)

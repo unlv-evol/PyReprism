@@ -1,49 +1,44 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Nginx:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Nginx(BaseLanguage):
+    """Nginx configuration language helper.
+
+    Keeps comment handling for `#` comments and preserves text outside
+    comments in the 'noncomment' group required by BaseLanguage.
+    """
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.nginx
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # Nginx uses directives rather than traditional keywords; keep empty
+        # for now and expand later if you want directive-aware removal.
+        return []
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]*[^\n]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]*(?:\n|$))', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'\b\d+\b')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'[{};=]')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Nginx.keywords()) + r')\b')
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList=isList)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Nginx.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Nginx.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return super().remove_keywords(source)

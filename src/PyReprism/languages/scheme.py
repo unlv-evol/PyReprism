@@ -1,49 +1,52 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Scheme:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Scheme(BaseLanguage):
+    """Scheme/Racket-like language helpers."""
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.scheme
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # No keywords defined previously
+        return []
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>;.*?$|#\|[\s\S]*?\|#|#\|.*?$|^.*?\|#)|(?P<noncomment>[^;#]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        # Scheme: ; line comments, and block comments #| ... |#
+        return re.compile(r"(?P<comment>;.*?$|#\|[\s\S]*?\|#)|(?P<noncomment>[^;#\n]+)", re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def number_regex(cls) -> re.Pattern:
+        # No number regex previously; return a noop pattern
+        return re.compile(r'^$')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def operator_regex(cls) -> re.Pattern:
+        return re.compile(r'^$')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Scheme.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        return re.compile(r"^$")
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
         result = []
-        for match in Scheme.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
+        for match in cls.comment_regex().finditer(source_code):
+            non = match.groupdict().get('noncomment')
+            if non:
+                result.append(non)
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Scheme.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return super().remove_keywords(source)

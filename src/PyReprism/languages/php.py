@@ -7,6 +7,12 @@ from .registry import LanguageRegistry
 
 @LanguageRegistry.register
 class PHP(BaseLanguage):
+    """PHP language helper.
+
+    Provides PHP-specific regexes for comments, numbers, operators, delimiters,
+    and a conservative keyword list. Delegates comment/keyword removal to
+    BaseLanguage so behavior is consistent across languages.
+    """
     @classmethod
     def file_extension(cls) -> str:
         return extension.php
@@ -17,7 +23,10 @@ class PHP(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r"""(?P<comment>#.*?$|//.*?$|[{}]+)|(?P<multilinecomment>/\*.*?\*/)|(?P<noncomment>'(\\.|[^\\'])*'|"(\\.|[^\\"])*"|.[^#/\'"{}]*)""", re.DOTALL | re.MULTILINE)
+        # Capture single-line comments (#, //) and block comments (/* ... */)
+        # in the same 'comment' group so BaseLanguage.remove_comments can
+        # uniformly extract the 'noncomment' group.
+            return re.compile(r"""(?P<comment>#.*?$|//.*?$|/\*[\s\S]*?\*/|[{}]+)|(?P<noncomment>'(\\.|[^\\'])*'|"(\\.|[^\\"])*"|.[^#/\'"{}]*)""", re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

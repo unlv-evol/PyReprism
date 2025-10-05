@@ -1,49 +1,56 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Aspnet:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Aspnet(BaseLanguage):
+    """ASP.NET / ASP flavor helper (handles HTML comments too)."""
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.aspnet
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'Assembly|Control|Implements|Import|Master(?:Type)?|OutputCache|Page|PreviousPageType|Reference|Register'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        return 'Assembly|Control|Implements|Import|Master(?:Type)?|OutputCache|Page|PreviousPageType|Reference|Register'.split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->|/\*.*?$|^.*?\*/|<!--.*?$|^.*?-->)|(?P<noncomment>[^/<!]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        # Match C-style block comments, // line comments and HTML comments <!-- -->
+        return re.compile(
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->)|(?P<noncomment>[^/<!]*[^\n]*)",
+            re.DOTALL | re.MULTILINE,
+        )
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        # No number regex defined previously; return a regex that matches nothing
+        return re.compile(r'^$')
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        # No operator regex defined previously; return a regex that matches nothing
+        return re.compile(r'^$')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Aspnet.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b')
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        # Preserve original behavior: only append truthy 'noncomment' groups.
         result = []
-        for match in Aspnet.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
+        for match in cls.comment_regex().finditer(source_code):
+            non = match.groupdict().get('noncomment')
+            if non:
+                result.append(non)
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Aspnet.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return re.sub(cls.keywords_regex(), '', source)
