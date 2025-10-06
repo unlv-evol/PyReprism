@@ -1,49 +1,40 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Batch:
-    def __init__():
-        pass
-
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Batch(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.batch
 
-    @staticmethod
-    def keywords() -> list:
+    @classmethod
+    def keywords(cls) -> list:
         keyword = 'not|cmdextversion|defined|errorlevel|exist|echo|set'.split('|')
         return keyword
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>REM.*?$|::.*?$)|(?P<noncomment>[^:R]*[^\n]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        return re.compile(r'(?P<comment>REM.*?$|::.*?$)|(?P<noncomment>[^:R]*[^\n]*)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'\^|==|\b(?:equ|neq|lss|leq|gtr|geq)\b|([*\/%+\-&^|]=?|<<=?|>>=?|[!~_=])')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'\^|==|\b(?:equ|neq|lss|leq|gtr|geq)\b|([*\/%%+\-&^|]=?|<<=?|>>=?|[!~_=])', re.IGNORECASE)
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Batch.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls):
+        return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b", re.IGNORECASE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Batch.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Batch.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return re.sub(re.compile(cls.keywords_regex()), '', source)

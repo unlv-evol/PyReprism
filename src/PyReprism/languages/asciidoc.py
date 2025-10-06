@@ -1,49 +1,78 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Asciidoc:
-    def __init__():
-        pass
+@LanguageRegistry.register
+class Asciidoc(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
+        """Return the file extension used for Asciidoc files.
 
-    @staticmethod
-    def file_extension() -> str:
+        :rtype: str
+        """
         return extension.asciidoc
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """Return a minimal keyword list for Asciidoc (currently empty).
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|////[\s\S]*?////|////.*?$|^.*?////)|(?P<noncomment>[^/]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+        :rtype: list
+        """
+        return []
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        """Compile and return a regex that captures Asciidoc comment forms.
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+        :rtype: re.Pattern
+        """
+        # Match // single-line and //// delimited blocks conservatively
+        return re.compile(r'(?P<comment>//.*?$|////[\s\S]*?////)|(?P<noncomment>[^/\n][^\n]*)', re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Asciidoc.keywords()) + r')\b')
+    @classmethod
+    def number_regex(cls):
+        """Return a placeholder regex for numeric literals.
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Asciidoc.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+        :rtype: re.Pattern
+        """
+        return re.compile(r'')
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Asciidoc.keywords_regex()), '', source)
+    @classmethod
+    def operator_regex(cls):
+        """Return a placeholder regex for operators.
+
+        :rtype: re.Pattern
+        """
+        return re.compile(r'')
+
+    @classmethod
+    def keywords_regex(cls):
+        """Compile and return keywords regex.
+
+        :rtype: re.Pattern
+        """
+        return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")
+
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        """Remove comments from Asciidoc source.
+
+        :param source_code: the Asciidoc text
+        :type source_code: str
+        :param isList: if True return a list of fragments
+        :type isList: bool
+        :rtype: list[str] or str
+        """
+        return super().remove_comments(source_code, isList)
+
+    @classmethod
+    def remove_keywords(cls, source: str):
+        """Remove keywords from the input string.
+
+        :param source: input string
+        :type source: str
+        :rtype: str
+        """
+        return re.sub(re.compile(cls.keywords_regex()), '', source)

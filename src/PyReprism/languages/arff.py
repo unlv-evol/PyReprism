@@ -1,49 +1,84 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Arff:
-    def __init__():
-        pass
+@LanguageRegistry.register
+class Arff(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
+        """Return the file extension used for ARFF files.
 
-    @staticmethod
-    def file_extension() -> str:
+        :rtype: str
+        """
         return extension.arff
 
-    @staticmethod
-    def keywords() -> list:
+    @classmethod
+    def keywords(cls) -> list:
+        """Return ARFF control keywords.
+
+        :rtype: list
+        """
         keyword = 'attribute|data|end|relation'.split('|')
         return keyword
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>%.*?$)|(?P<noncomment>[^%]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        """Compile and return a regex that splits ARFF comments and data.
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'\b\d+(?:\.\d+)?\b')
-        return pattern
+        :rtype: re.Pattern
+        """
+        return re.compile(r'(?P<comment>%.*?$)|(?P<noncomment>[^%]*)', re.MULTILINE)
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        """Return regex matching numeric literals (ints and floats).
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Arff.keywords()) + r')\b')
+        :rtype: re.Pattern
+        """
+        return re.compile(r'\b\d+(?:\.\d+)?\b')
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def operator_regex(cls):
+        """Return a placeholder operator regex.
+
+        :rtype: re.Pattern
+        """
+        return re.compile(r'')
+
+    @classmethod
+    def keywords_regex(cls):
+        """Compile and return the keywords regex for ARFF.
+
+        :rtype: re.Pattern
+        """
+        return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")
+
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        """Remove comment lines starting with '%' from ARFF content.
+
+        :param source_code: input ARFF text
+        :type source_code: str
+        :param isList: if True return list of non-comment fragments
+        :type isList: bool
+        :rtype: list[str] or str
+        """
         result = []
-        for match in Arff.comment_regex().finditer(source_code):
+        for match in cls.comment_regex().finditer(source_code):
             if match.group('noncomment'):
                 result.append(match.group('noncomment'))
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Arff.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        """Remove ARFF keywords from the provided source string.
+
+        :param source: input string
+        :type source: str
+        :rtype: str
+        """
+        return re.sub(re.compile(cls.keywords_regex()), '', source)

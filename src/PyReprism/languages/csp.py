@@ -1,49 +1,44 @@
 import re
-from PyReprism.utils import extension
+from PyRePrism.utils import extension
+from PyRePrism.languages.base import BaseLanguage
+from PyRePrism.languages.registry import LanguageRegistry
 
 
-class CSP:
-    def __init__():
-        pass
-
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class CSP(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.csp
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'base-uri|form-action|frame-ancestors|plugin-types|referrer|reflected-xss|report-to|report-uri|require-sri-for|sandbox) |(?:block-all-mixed-content|disown-opener|upgrade-insecure-requests)(?: |;)|(?:child|connect|default|font|frame|img|manifest|media|object|script|style|worker)-src'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # Common CSP directives
+        return [
+            'default-src','script-src','style-src','img-src','connect-src','font-src','object-src','media-src','frame-src',
+            'base-uri','form-action','frame-ancestors','report-uri','report-to','require-sri-for','sandbox','block-all-mixed-content','upgrade-insecure-requests'
+        ]
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>--.*?$|/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/)|(?P<noncomment>[^/\-]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        # CSP is typically header text — use a conservative non-comment match
+        return re.compile(r'(?P<noncomment>.+)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(CSP.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls):
+        return re.compile(r"\b(" + "|".join(re.escape(k) for k in cls.keywords()) + r")\b", re.IGNORECASE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in CSP.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(CSP.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return re.sub(cls.keywords_regex(), '', source)

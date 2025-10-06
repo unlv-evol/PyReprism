@@ -1,50 +1,43 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Bison:
-    def __init__():
-        pass
-
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Bison(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.bison
 
-    @staticmethod
-    def keywords() -> list:
-        # keyword = '%\w+'.split('|')
-        # return keyword
-        pass
+    @classmethod
+    def keywords(cls) -> list:
+        # Bison/Yacc directives typically start with % (e.g. %token, %start)
+        return ['%token', '%left', '%right', '%nonassoc', '%start', '%union', '%type']
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/)|(?P<noncomment>[^/]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/\n][^\n]*)', re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'(^|[^@])\b(?:0x[\da-f]+|\d+)')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'(^|[^@])\b(?:0x[\da-f]+|\d+)')
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Bison.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls):
+        kws = cls.keywords() or []
+        if not kws:
+            return re.compile(r'\b\B')
+        return re.compile(r"\b(" + "|".join(re.escape(k) for k in kws) + r")\b", re.IGNORECASE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Bison.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Bison.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return re.sub(re.compile(cls.keywords_regex()), '', source)

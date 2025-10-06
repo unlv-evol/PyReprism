@@ -1,49 +1,51 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class ForTran:
-    def __init__():
-        pass
+@LanguageRegistry.register
+class ForTran(BaseLanguage):
+    """Fortran language helper (minimal)."""
 
-    @staticmethod
-    def file_extension() -> str:
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.fortran
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'INTEGER|REAL|DOUBLE|PRECISION|COMPLEX|CHARACTER|LOGICAL|/\b(?:END ?)?(?:BLOCK ?DATA|DO|FILE|FORALL|FUNCTION|IF|INTERFACE|MODULE(?! PROCEDURE)|PROGRAM|SELECT|SUBROUTINE|TYPE|WHERE|ALLOCATABLE|ALLOCATE|BACKSPACE|CALL|CASE|CLOSE|COMMON|CONTAINS|CONTINUE|CYCLE|DATA|DEALLOCATE|DIMENSION|DO|END|EQUIVALENCE|EXIT|EXTERNAL|FORMAT|GO ?TO|IMPLICIT(?: NONE)?|INQUIRE|INTENT|INTRINSIC|MODULE PROCEDURE|NAMELIST|NULLIFY|OPEN|OPTIONAL|PARAMETER|POINTER|PRINT|PRIVATE|PUBLIC|READ|RETURN|REWIND|SAVE|SELECT|STOP|TARGET|WHILE|WRITE|ASS'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # Keep the original token list but guard against mis-formed entries
+        return [
+            'INTEGER', 'REAL', 'DOUBLE', 'PRECISION', 'COMPLEX', 'CHARACTER', 'LOGICAL'
+        ]
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>!.*?$)|(?P<noncomment>[^!]*[^\n]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        return re.compile(r'(?P<comment>!.*?$)|(?P<noncomment>[^!\n]+)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:[ED][+-]?\d+)?(?:_\w+)?')
-        return pattern
+    @classmethod
+    def number_regex(cls) -> re.Pattern:
+        return re.compile(r'(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:[ED][+-]?\d+)?(?:_\w+)?')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'\*\*|\/\/|=>|[=\/]=|[<>]=?|::|[+\-*=%]|\.(?:EQ|NE|LT|LE|GT|GE|NOT|AND|OR|EQV|NEQV)\.|\.[A-Z]+\.')
-        return pattern
+    @classmethod
+    def operator_regex(cls) -> re.Pattern:
+        return re.compile(r'\*\*|\/\/|=>|[=\/]=|[<>]=?|::|[+\-*=%]|\.(?:EQ|NE|LT|LE|GT|GE|NOT|AND|OR|EQV|NEQV)\.|\.[A-Z]+\.')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(ForTran.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b')
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
         result = []
-        for match in ForTran.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
+        for match in cls.comment_regex().finditer(source_code):
+            non = match.groupdict().get('noncomment')
+            if non:
+                result.append(non)
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(ForTran.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return super().remove_keywords(source)

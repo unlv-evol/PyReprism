@@ -1,11 +1,5 @@
 import re
 from PyReprism.utils import extension
-
-from .base import BaseLanguage
-from .registry import LanguageRegistry
-import re
-from PyReprism.utils import extension
-
 from .base import BaseLanguage
 from .registry import LanguageRegistry
 
