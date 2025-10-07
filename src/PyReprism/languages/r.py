@@ -1,10 +1,6 @@
 
 import re
-try:
-	from PyReprism.utils import extension
-except Exception:
-	from PyRePrism.utils import extension  # fallback
-
+from PyReprism.utils import extension
 from .base import BaseLanguage
 from .registry import LanguageRegistry
 
