@@ -85,3 +85,11 @@ class Xojo(BaseLanguage):
 		"""
 		return super().remove_keywords(source)
 
+	@classmethod
+	def operator_regex(cls) -> re.Pattern:
+		"""Return an operator regex for Xojo source tokenization.
+
+		:rtype: re.Pattern
+		"""
+		return re.compile(r'[+\-*/%=<>!&|:^~]+')
+

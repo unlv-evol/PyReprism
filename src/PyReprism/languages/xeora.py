@@ -65,3 +65,14 @@ class Xeora(BaseLanguage):
 		"""
 		return super().remove_keywords(source)
 
+	@classmethod
+	def operator_regex(cls) -> re.Pattern:
+		"""Return a regex matching common operators and punctuation in templates.
+
+		This is a conservative pattern intended for token splitting and
+		normalization tasks.
+
+		:rtype: re.Pattern
+		"""
+		return re.compile(r'[=+\-*/<>!&|%^~]+')
+
