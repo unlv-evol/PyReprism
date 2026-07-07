@@ -38,6 +38,9 @@ docs = [
   "sphinx_rtd_theme",
 ]
 
+[project.scripts]
+pyreprism = "PyReprism.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/unlv-evol/PyReprism"
 Documentation = "https://pyreprism.readthedocs.io"
