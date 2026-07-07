@@ -1,0 +1,27 @@
+# PyReprism pre-commit hooks.
+#
+# Add to your .pre-commit-config.yaml, e.g.:
+#
+#   - repo: https://github.com/unlv-evol/PyReprism
+#     rev: v0.0.4
+#     hooks:
+#       - id: pyreprism-strip-comments
+#         files: ^generated/           # scope it! these hooks rewrite files
+#
+# NOTE: these hooks modify source in place. Scope them with `files:`/`exclude:`
+# to directories where stripping comments/whitespace is intended (e.g. generated
+# or vendored code), not your whole repository.
+
+- id: pyreprism-strip-comments
+  name: PyReprism – strip comments
+  description: Remove comments in place (language auto-detected from file extension).
+  entry: pyreprism remove comments --in-place
+  language: python
+  types: [text]
+
+- id: pyreprism-normalize-whitespace
+  name: PyReprism – normalize whitespace
+  description: Collapse insignificant whitespace in place.
+  entry: pyreprism preprocess --steps whitespace --in-place
+  language: python
+  types: [text]
