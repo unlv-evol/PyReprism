@@ -164,3 +164,8 @@ cython_debug/
 
 # others
 __test__.py
+
+# macOS
+.DS_Store
+# Claude Code agent workspace
+.claude/

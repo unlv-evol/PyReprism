@@ -1,49 +1,56 @@
 import re
-from PyReprism.utils import extension
+try:
+    from PyReprism.utils import extension
+except Exception:
+    # Support alternate casing that occurs in some import paths
+    from PyReprism.utils import extension  # type: ignore
+
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Stylus:
-    def __init__():
-        pass
+@LanguageRegistry.register
+class Stylus(BaseLanguage):
+    """Stylus language helper."""
 
-    @staticmethod
-    def file_extension() -> str:
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.stylus
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        return []
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/)|(?P<noncomment>[^/]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/\n][^\n]*)', re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def number_regex(cls) -> re.Pattern:
+        return re.compile(r'(?!x)x')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def operator_regex(cls) -> re.Pattern:
+        return re.compile(r'(?!x)x')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Stylus.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        kws = cls.keywords()
+        if not kws:
+            return re.compile(r'(?!x)x')
+        return re.compile(r'\b(' + '|'.join(kws) + r')\b')
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
         result = []
-        for match in Stylus.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
+        for match in cls.comment_regex().finditer(source_code):
+            non = match.groupdict().get('noncomment')
+            if non:
+                result.append(non)
         if isList:
             return result
         return ''.join(result)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Stylus.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str) -> str:
+        return super().remove_keywords(source)

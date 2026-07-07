@@ -1,49 +1,34 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Ocaml:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Ocaml(BaseLanguage):
+    """OCaml support (``(* *)`` comments)."""
+
+    @classmethod
+    def file_extension(cls) -> str:
+        """:rtype: str"""
         return extension.ocaml
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """:rtype: list[str]"""
+        return (
+            'and|as|assert|begin|class|constraint|do|done|downto|else|end|exception|external|'
+            'for|fun|function|functor|if|in|include|inherit|initializer|lazy|let|match|method|'
+            'module|mutable|new|nonrec|object|of|open|or|private|rec|sig|struct|then|to|try|'
+            'type|val|virtual|when|while|with|true|false'
+        ).split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>(\(\*[\s\S]*?\*\)|;.*?$|;;.*?$))|(?P<noncomment>[^;(*]*[^\n]*)', re.MULTILINE)
-        return pattern
-
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Ocaml.keywords()) + r')\b')
-
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Ocaml.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Ocaml.keywords_regex()), '', source)
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        """:rtype: re.Pattern"""
+        return re.compile(
+            r'(?P<comment>\(\*[\s\S]*?\*\))|'
+            r'(?P<noncomment>"(\\.|[^\\"])*"|.[^(*"]*|[(*])',
+            re.DOTALL | re.MULTILINE,
+        )

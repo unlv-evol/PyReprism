@@ -1,49 +1,79 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Julia:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Julia(BaseLanguage):
+    """Julia language helper.
+
+    Handles Julia comments (`#` and block comments `#= ... =#`), numbers,
+    operators and a conservative keyword list.
+    """
+
+    @classmethod
+    def file_extension(cls) -> str:
+        """Return the file extension used for Julia source files.
+
+        :rtype: str
+        """
         return extension.julia
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'abstract|baremodule|begin|bitstype|break|catch|ccall|const|continue|do|else|elseif|end|export|finally|for|function|global|if|immutable|import|importall|let|local|macro|module|print|println|quote|return|try|type|typealias|using|while|true|false'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """Return a conservative list of Julia keywords.
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>#.*?$|#=[\s\S]*?=#|#=.*?$|^.*?=#)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^#\'"]*)', re.DOTALL | re.MULTILINE)
-        return pattern
+        :rtype: list
+        """
+        return 'abstract|baremodule|begin|bitstype|break|catch|ccall|const|continue|do|else|elseif|end|export|finally|for|function|global|if|immutable|import|importall|let|local|macro|module|print|println|quote|return|try|type|typealias|using|while|true|false'.split('|')
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'(?:\b(?=\d)|\B(?=\.))(?:0[box])?(?:[\da-f]+\.?\d*|\.\d+)(?:[efp][+-]?\d+)?j?')
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        """Compile and return a regex that captures Julia comments and non-comment code.
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'[-+*^%÷&$\\]=?|\/[\/=]?|!=?=?|\|[=>]?|<(?:<=?|[=:])?|>(?:=|>>?=?)?|==?=?|[~≠≤≥]')
-        return pattern
+        Supports single-line comments starting with ``#`` and block comments
+        delimited with ``#= ... =#``. The pattern provides named groups
+        ``comment`` and ``noncomment`` so BaseLanguage helpers can extract
+        non-comment fragments.
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Julia.keywords()) + r')\b')
+        :rtype: re.Pattern
+        """
+        # Support single-line '#' and block comments '#= ... =#'
+        pattern = r'''(?P<comment>#=.*?$|#=[\s\S]*?=#|#.*?$)|(?P<noncomment>'(\\.|[^\\'])*'|"(\\.|[^\\"])*"|[^#'\"]+)'''
+        return re.compile(pattern, re.DOTALL | re.MULTILINE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Julia.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def number_regex(cls):
+        """Return a regex that matches Julia numeric literals (heuristic).
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Julia.keywords_regex()), '', source)
+        :rtype: re.Pattern
+        """
+        return re.compile(r'(?:\b(?=\d)|\B(?=\.))(?:0[box])?(?:[\da-f]+\.?\d*|\.\d+)(?:[efp][+-]?\d+)?j?')
+
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'[-+*^%÷&$\\]=?|\/[\/=]?|!=?=?|\|[=>]?|<(?:<=?|[=:])?|>(?:=|>>?=?)?|==?=?|[~≠≤≥]')
+
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        """Remove comments from Julia source using BaseLanguage helper.
+
+        :param source_code: Julia source text
+        :type source_code: str
+        :param isList: if True return list of non-comment fragments
+        :type isList: bool
+        :rtype: list[str] or str
+        """
+        return super().remove_comments(source_code, isList=isList)
+
+    @classmethod
+    def remove_keywords(cls, source: str):
+        """Remove known Julia keywords from the provided source.
+
+        :param source: input source text
+        :type source: str
+        :rtype: str
+        """
+        return super().remove_keywords(source)

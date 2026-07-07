@@ -5,8 +5,15 @@ PyReprism documentation!
 
 .. toctree::
    :maxdepth: 2
-   
+
    intro
+   api
+   cli
+   tokens
+   metrics
+   engines
+   batch
+   diffs
    language
    extension
    normalizer

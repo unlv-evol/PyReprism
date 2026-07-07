@@ -1,50 +1,32 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class Vim:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Vim(BaseLanguage):
+    """Vim script support (``"`` line comments)."""
+
+    @classmethod
+    def file_extension(cls) -> str:
+        """:rtype: str"""
         return extension.vim
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """:rtype: list[str]"""
+        return (
+            'function|endfunction|if|elseif|else|endif|while|endwhile|for|endfor|in|return|'
+            'let|unlet|call|execute|echo|echom|set|setlocal|autocmd|augroup|command|'
+            'try|catch|finally|endtry|throw|break|continue'
+        ).split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>".*?$)|(?P<noncomment>[^"\n]*[^\n]*)', re.MULTILINE)
-        return pattern
-
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Vim.keywords()) + r')\b')
-
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Vim.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        pattern = re.sub(re.compile(Vim.keywords_regex()), '', source)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        """:rtype: re.Pattern"""
+        return re.compile(
+            r'(?P<comment>".*?$)|(?P<noncomment>.[^"]*)',
+            re.DOTALL | re.MULTILINE,
+        )

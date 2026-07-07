@@ -1,147 +1,101 @@
-__version__ = "0.0.3"
-from .python import *
-from .java import *
-from .c import *
-from .csharp import *
-from .bash import *
-from .markup import *
-from .perl import *
-from .php import *
-from .ruby import *
-from .rust import *
-from .abap import *
-from .actionscript import * 
-from .ada import * 
-from .apacheconf import *
-from .apl import *
-from .applescript import *
-from .arduino import * 
-from .arff import * 
-from .asciidoc import * 
-from .asm6502 import * 
-from .aspnet import * 
-from .autohotkey import * 
-from .autoit import * 
-from .bash import * 
-from .basic import * 
-from .batch import * 
-from .bison import * 
-from .brainfuck import * 
-from .bro import * 
-from .clike import * 
-from .clojure import * 
-from .coffeescript import * 
-from .cpp import * 
-from .crystal import * 
-from .csp import * 
-from .css_extras import * 
-from .css import * 
-from .d import * 
-from .dart import * 
-from .diff import * 
-from .django import * 
-from .docker import * 
-from .eiffel import * 
-from .elixir import * 
-from .erb import * 
-from .erlang import * 
-from .flow import *
-from .fortran import *
-from .fsharp import *
-from .gedcom import *
-from .gherkin import *
-from .git import * 
-from .glsl import *
-from .go import *
-from .graphql import * 
-from .groovy import *
-from .haml import * 
-from .handlebars import * 
-from .haskell import *
-from .haxe import *
-from .hpkp import *
-from .hsts import *
-from .ichigojam import *
-from .icon import * 
-from .inform7 import *
-from .ini import *
-from .io import *
-from .j import *
-from .javascript import *
-from .jolie import *
-from .json import *
-from .jsx import *
-from .julia import *
-from .keyman import *
-from .kotlin import *
-from .latex import *
-from .less import *
-from .liquid import *
-from .livescript import *
-from .lolcode import *
-from .lua import * 
-from .makefile import * 
-from .markdown import * 
-from .markup_templating import *
-from .markup import *
-from .matlab import * 
-from .mel import * 
-from .mizar import *
-from .monkey import *
-from .n4js import *
-from .nasm import *
-from .nginx import * 
-from .nim import * 
-from .nix import * 
-from .nsis import * 
-from .objectivec import * 
-from .ocaml import * 
-from .opencl import * 
-from .oz import * 
-from .parigp import * 
-from .parser import * 
-from .pascal import *
-from .perl import * 
-from .php_extras import * 
-from .plsql import * 
-from .powershell import * 
-from .processing import * 
-from .prolog import * 
-from .properties import * 
-from .protobuf import * 
-from .pug import * 
-from .puppet import * 
-from .pure import *  
-from .q import *
-from .qore import * 
-from .r import * 
-from .reason import * 
-from .renpy import * 
-from .rest import * 
-from .rip import * 
-from .roboconf import * 
-from .sas import * 
-from .sass import * 
-from .scala import * 
-from .scheme import *
-from .scss import * 
-from .smalltalk import * 
-from .smarty import * 
-from .soy import * 
-from .stylus import * 
-from .swift import * 
-from .tcl import * 
-from .textile import * 
-from .tsx import * 
-from .twig import * 
-from .typescript import * 
-from .vbnet import * 
-from .velocity import * 
-from .verilog import * 
-from .vhdl import * 
-from .vim import * 
-from .visual_basic import * 
-from .wasam import * 
-from .xeora import * 
-from .xojo import * 
-from .yaml import *
+"""Language registry bridge and lazy loader for PyReprism language modules.
+
+Each language lives in ``PyReprism/languages/<name>.py`` and self-registers with
+:class:`~PyReprism.languages.registry.LanguageRegistry` on import. Language classes
+can be accessed lazily as attributes, e.g. ``PyReprism.languages.Python``.
+"""
+import importlib
+import os
+import pkgutil
+from typing import Any, Optional, Type
+
+from .. import __version__  # single source of truth for the package version
+from .base import BaseLanguage
+from .registry import LanguageRegistry
+
+# Common languages surfaced for discoverability. Any registered language is
+# importable by name regardless of whether it appears here (see ``__getattr__``).
+__all__ = [
+    'Python', 'JavaScript', 'CPP', 'C', 'Clike', 'Go', 'MatLab', 'Ruby', 'PHP', 'Bash',
+    'get_language_by_extension',
+]
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy-load a language class by attribute name.
+
+    Accessing e.g. ``PyReprism.languages.Python`` imports the submodule
+    ``PyReprism.languages.python`` and returns the registered class.
+    """
+    cls = LanguageRegistry.get(name)
+    if cls:
+        return cls
+
+    try:
+        importlib.import_module(f'.{name.lower()}', __name__)
+    except ModuleNotFoundError:
+        raise AttributeError(f"module {__name__} has no attribute {name}")
+
+    cls = LanguageRegistry.get(name)
+    if cls:
+        return cls
+    raise AttributeError(f"module {__name__} has no attribute {name}")
+
+
+def _load_all_languages() -> None:
+    """Import every language submodule so the registry is fully populated.
+
+    Language modules register themselves on import; without importing them the
+    registry only knows about classes that have already been accessed.
+    """
+    package_dir = os.path.dirname(__file__)
+    for module in pkgutil.iter_modules([package_dir]):
+        name = module.name
+        if name.startswith('_') or name in ('base', 'registry'):
+            continue
+        try:
+            importlib.import_module(f'.{name}', __name__)
+        except Exception:
+            # A broken/optional language module should not break lookups.
+            continue
+
+
+# For extensions shared by several languages, prefer the canonical/primary one.
+_PREFERRED_LANGUAGE = {
+    '.py': 'Python',
+    '.h': 'C',
+    '.r': 'R',
+    '.pl': 'Perl',
+    '.ts': 'TypeScript',
+    '.php': 'PHP',
+    '.sql': 'SQL',
+    '.vb': 'Vbnet',
+    '.js': 'JavaScript',
+}
+
+
+def get_language_by_extension(ext: str) -> Optional[Type[BaseLanguage]]:
+    """Return a registered language class whose ``file_extension()`` matches ``ext``.
+
+    All language modules are imported on first call so cold lookups succeed. Some
+    extensions are shared by several languages (``.py`` -> Python/Django, ``.m`` ->
+    MatLab/ObjectiveC); a small preference table picks the canonical language for the
+    common cases, otherwise the first registered match is returned.
+    """
+    _load_all_languages()
+    registry = LanguageRegistry.all()
+    preferred = _PREFERRED_LANGUAGE.get(ext)
+    if preferred:
+        cls = registry.get(preferred)
+        try:
+            if cls is not None and cls.file_extension() == ext:
+                return cls
+        except Exception:
+            pass
+    for cls in registry.values():
+        try:
+            if cls.file_extension() == ext:
+                return cls
+        except Exception:
+            continue
+    return None

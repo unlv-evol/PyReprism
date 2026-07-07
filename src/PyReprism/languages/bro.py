@@ -1,49 +1,44 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Bro:
-    def __init__():
-        pass
-
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class Bro(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.bro
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = 'break|next|continue|alarm|using|of|add|delete|export|print|return|schedule|when|timeout|addr|any|bool|count|double|enum|file|int|interval|pattern|opaque|port|record|set|string|subnet|table|time|vector|for|if|else|in|module|function|load(?:-(?:sigs|plugin))?|unload|prefixes|ifn?def|else|(?:end)?if|DIR|FILENAME))|(?:&?(?:redef|priority|log|optional|default|add_func|delete_func|expire_func|read_expire|write_expire|create_expire|synchronized|persistent|rotate_interval|rotate_size|encrypt|raw_output|mergeable|group|error_handler|type_column'.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        # Conservative, common Bro/Zeek keywords and types
+        return [
+            'break','next','continue','alarm','using','of','add','delete','export','print','return','schedule','when','timeout',
+            'addr','any','bool','count','double','enum','file','int','interval','pattern','opaque','port','record','set','string','subnet','table','time','vector',
+            'for','if','else','in','module','function','load','unload','prefixes','ifdef','ifndef','DIR','FILENAME','redef','priority','log','optional','default'
+        ]
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]*)', re.MULTILINE)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n].*?$)', re.MULTILINE)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'\b0x[\da-f]+\b|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'\b0x[\da-fA-F]+\b|(?:\b\d+\.?\d*|\B\.\d+)(?:[eE][+-]?\d+)?')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&|\|\|?|\?|\*|\/|~|\^|%')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&|\|\|?|\?|\*|\/|~|\^|%')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Bro.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls):
+        return re.compile(r"\b(" + "|".join(re.escape(k) for k in cls.keywords()) + r")\b", re.IGNORECASE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Bro.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Bro.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return re.sub(cls.keywords_regex(), '', source)

@@ -1,50 +1,42 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class BrainFuck:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class BrainFuck(BaseLanguage):
+    """Brainf*ck language helper.
+
+    Brainf*ck doesn't have textual keywords; it uses single-character operators.
+    This class focuses on preserving the operators and stripping all other
+    non-operator characters (treated as comments/non-code in many contexts).
+    """
+
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.brainfuck
 
-    @staticmethod
-    def keywords() -> list:
-        # keyword = '\S+'.split('|')
-        # return keyword
-        pass
+    @classmethod
+    def keywords(cls) -> list:
+        # No keywords in Brainfuck; return empty list so keywords_regex matches nothing.
+        return []
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>[^><+\-.,[\]]+)|(?P<noncomment>[><+\-.,[\]])')
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        # Keep operator characters in 'noncomment' group and treat everything else as 'comment'.
+        return re.compile(r'(?P<comment>[^><+\-.,\[\]]+)|(?P<noncomment>[><+\-.,\[\]])')
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'[><+\-.,\[\]]')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'[.,]')
-        return pattern
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList=isList)
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(BrainFuck.keywords()) + r')\b')
+    @classmethod
+    def remove_keywords(cls, source: str):
+        return super().remove_keywords(source)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in BrainFuck.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(BrainFuck.keywords_regex()), '', source)

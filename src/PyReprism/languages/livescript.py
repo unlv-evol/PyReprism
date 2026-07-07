@@ -1,49 +1,45 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class LiveScript:
-    def __init__():
-        pass
-
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class LiveScript(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
         return extension.livescript
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        return ''.split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>#.*?$|/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/)|(?P<noncomment>[^#/*]*[^\n]*)', re.MULTILINE | re.DOTALL)
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        return re.compile(r'(?P<comment>#.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>.[^#/]*)', re.MULTILINE | re.DOTALL)
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def number_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def operator_regex(cls):
+        return re.compile(r'')
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(LiveScript.keywords()) + r')\b')
+    @classmethod
+    def keywords_regex(cls):
+        keys = cls.keywords()
+        if not keys:
+            return re.compile(r'$^')
+        return re.compile(r'\b(' + '|'.join(re.escape(k) for k in keys) + r')\b')
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in LiveScript.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        return super().remove_comments(source_code, isList)
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(LiveScript.keywords_regex()), '', source)
+    @classmethod
+    def remove_keywords(cls, source: str):
+        kr = cls.keywords_regex()
+        if kr.pattern == '$^':
+            return source
+        return re.sub(kr, '', source)

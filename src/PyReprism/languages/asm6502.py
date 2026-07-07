@@ -1,49 +1,88 @@
 import re
 from PyReprism.utils import extension
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
 
-class Asm6502:
-    def __init__():
-        pass
+@LanguageRegistry.register
+class Asm6502(BaseLanguage):
+    @classmethod
+    def file_extension(cls) -> str:
+        """Return the file extension used for 6502 assembly files.
 
-    @staticmethod
-    def file_extension() -> str:
+        :rtype: str
+        """
         return extension.asm6502
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """Return a list of common 6502 mnemonics.
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>;.*?$)|(?P<noncomment>[^;]*)', re.MULTILINE)
-        return pattern
+        The returned list is used to construct a case-insensitive regex when
+        matching keywords.
 
-    @staticmethod
-    def number_regex():
-        pattern = ''
-        return pattern
+        :rtype: list
+        """
+        # Common 6502 mnemonics (uppercase preferred); regex will be case-insensitive
+        return [
+            'ADC','AND','ASL','BCC','BCS','BEQ','BIT','BMI','BNE','BPL','BRK','BVC','BVS',
+            'CLC','CLD','CLI','CLV','CMP','CPX','CPY','DEC','DEX','DEY','EOR','INC','INX','INY',
+            'JMP','JSR','LDA','LDX','LDY','LSR','NOP','ORA','PHA','PHP','PLA','PLP','ROL','ROR',
+            'RTI','RTS','SBC','SEC','SED','SEI','STA','STX','STY','TAX','TAY','TSX','TXA','TXS','TYA',
+            'INX','DEX','INY','DEY','INC','DEC'
+        ]
 
-    @staticmethod
-    def operator_regex():
-        pattern = ''
-        return pattern
+    @classmethod
+    def comment_regex(cls):
+        """Compile and return a regex that captures semicolon comments and non-comment text.
 
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(Asm6502.keywords()) + r')\b')
+        :rtype: re.Pattern
+        """
+        return re.compile(r'(?P<comment>;.*?$)|(?P<noncomment>[^;]*)', re.MULTILINE)
 
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Asm6502.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
+    @classmethod
+    def number_regex(cls):
+        """Return a regex for numeric literals (placeholder).
 
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Asm6502.keywords_regex()), '', source)
+        :rtype: re.Pattern
+        """
+        return re.compile(r'')
+
+    @classmethod
+    def operator_regex(cls):
+        """Return a regex matching operators (placeholder).
+
+        :rtype: re.Pattern
+        """
+        return re.compile(r'')
+
+    @classmethod
+    def keywords_regex(cls):
+        """Compile and return the keywords regex (case-insensitive).
+
+        :rtype: re.Pattern
+        """
+        # Make keyword matching case-insensitive since assembly is often lowercase
+        return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b", re.IGNORECASE)
+
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        """Remove comments from 6502 assembly source.
+
+        :param source_code: assembly source text
+        :type source_code: str
+        :param isList: if True return list of non-comment fragments
+        :type isList: bool
+        :rtype: list[str] or str
+        """
+        return super().remove_comments(source_code, isList)
+
+    @classmethod
+    def remove_keywords(cls, source: str):
+        """Remove keywords from the given source string.
+
+        :param source: input source string
+        :type source: str
+        :rtype: str
+        """
+        return re.sub(re.compile(cls.keywords_regex()), '', source)

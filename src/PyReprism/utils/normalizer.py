@@ -2,8 +2,7 @@ import re
 
 
 class Normalizer:
-    def __init__():
-        pass
+    """Static helpers for normalizing whitespace in source code."""
 
     @staticmethod
     def whitespaces_regex() -> re.Pattern:
