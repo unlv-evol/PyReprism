@@ -1,50 +1,41 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class VisualBasic:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class VisualBasic(BaseLanguage):
+    """Visual Basic support (``'`` line comments)."""
+
+    @classmethod
+    def file_extension(cls) -> str:
+        """:rtype: str"""
         return extension.visual_basic
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """:rtype: list[str]"""
+        return (
+            'Dim|Const|As|If|Then|Else|ElseIf|End|Select|Case|For|Each|Next|To|Step|While|Wend|'
+            'Do|Loop|Until|Function|Sub|Return|Exit|Call|Class|Module|Property|Get|Set|New|'
+            'Nothing|ByVal|ByRef|Optional|Public|Private|Protected|Friend|Shared|Static|'
+            'And|Or|Not|Xor|Mod|Is|True|False'
+        ).split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>\'.*?$|REM.*?$)|(?P<noncomment>[^\'\nR]*[^\n]*)', re.MULTILINE | re.IGNORECASE)
-        return pattern
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        """:rtype: re.Pattern"""
+        return re.compile(
+            r'(?P<comment>\'.*?$)|(?P<noncomment>.[^\']*)',
+            re.DOTALL | re.MULTILINE,
+        )
 
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
+    @classmethod
+    def keywords_regex(cls) -> re.Pattern:
+        """Case-insensitive keyword matcher (VB is case-insensitive).
 
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(VisualBasic.keywords()) + r')\b')
-
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in VisualBasic.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        pattern = re.sub(re.compile(VisualBasic.keywords_regex()), '', source)
-        return pattern
+        :rtype: re.Pattern
+        """
+        return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b', re.IGNORECASE)

@@ -27,7 +27,7 @@ class ObjectiveC(BaseLanguage):
     def comment_regex(cls) -> re.Pattern:
         # Capture // line comments and C-style block comments; provide a
         # 'noncomment' group with the text to keep.
-        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/]*[^\n]*)', re.MULTILINE)
+        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>"(\\.|[^\\"])*"|.[^/"]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

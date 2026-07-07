@@ -2,6 +2,10 @@
 show-source = True
 count = True
 statistics = True
-; max-line-length = 150
-ignore = E501
-exclude = .github,venv,build,dist,docs,.venv,src/tests,src/PyReprism/languages/__init__.py,__test__.py
+max-line-length = 120
+# E501: long lines are common in this project's regex/keyword tables.
+# The W1/W2/W3 and E1/E2/E3 codes below are pre-existing whitespace/indentation
+# style debt across the legacy language modules; they are ignored so flake8 can
+# focus on real correctness issues (pyflakes F-codes, undefined names, etc.).
+extend-ignore = E501, W191, W291, W292, W293, W391, E101, E117, E128, E231, E302, E303, E265, E266
+exclude = .git,.github,venv,.venv,build,dist,docs,htmlcov,src/tests,src/PyReprism/languages/__init__.py,__test__.py

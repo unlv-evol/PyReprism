@@ -38,7 +38,7 @@ class Python(BaseLanguage):
         :return: A compiled regex pattern with named groups to match single-line comments, multiline comments, and non-comment code elements.
         :rtype: re.Pattern
         """
-        return re.compile(r"(?P<comment>#.*?$)|(?P<multilinecomment1>\"\"\".*?\"\"\")|(?P<multilinecomment2>''' .*?''')|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^#'\"]*)", re.DOTALL | re.MULTILINE)
+        return re.compile(r"(?P<comment>#.*?$)|(?P<multilinecomment1>\"\"\".*?\"\"\")|(?P<multilinecomment2>'''.*?''')|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^#'\"]*)", re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

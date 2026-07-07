@@ -1,49 +1,35 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class N4js:
-    def __init__():
-        pass
 
-    @staticmethod
-    def file_extension() -> str:
+@LanguageRegistry.register
+class N4js(BaseLanguage):
+    """N4JS support (``//`` and ``/* */`` comments)."""
+
+    @classmethod
+    def file_extension(cls) -> str:
+        """:rtype: str"""
         return extension.n4js
 
-    @staticmethod
-    def keywords() -> list:
-        keyword = ''.split('|')
-        return keyword
+    @classmethod
+    def keywords(cls) -> list:
+        """:rtype: list[str]"""
+        return (
+            'break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|'
+            'extends|finally|for|function|if|import|in|instanceof|new|null|return|super|switch|'
+            'this|throw|try|typeof|var|void|while|with|yield|let|await|async|'
+            'implements|interface|package|private|protected|public|static|get|set|'
+            'true|false|abstract'
+        ).split('|')
 
-    @staticmethod
-    def comment_regex():
-        pattern = re.compile(r'(?P<comment>/\*[\s\S]*?\*/|/\*.*?$|^.*?\*/)|(?P<noncomment>[^/*]*[^\n]*)', re.DOTALL | re.MULTILINE)
-        return pattern
-
-    @staticmethod
-    def number_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def operator_regex():
-        pattern = re.compile(r'')
-        return pattern
-
-    @staticmethod
-    def keywords_regex():
-        return re.compile(r'\b(' + '|'.join(N4js.keywords()) + r')\b')
-
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in N4js.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(N4js.keywords_regex()), '', source)
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        """:rtype: re.Pattern"""
+        return re.compile(
+            r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|'
+            r'(?P<noncomment>"(\\.|[^\\"])*"|\'(\\.|[^\\\'])*\'|.[^/\'"]*)',
+            re.DOTALL | re.MULTILINE,
+        )

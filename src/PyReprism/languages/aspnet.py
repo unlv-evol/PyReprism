@@ -33,7 +33,7 @@ class Aspnet(BaseLanguage):
         """
         # Match C-style block comments, // line comments and HTML comments <!-- -->
         return re.compile(
-            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->)|(?P<noncomment>[^/<!]*[^\n]*)",
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->|<%--[\s\S]*?--%>)|(?P<noncomment>.[^/<]*)",
             re.DOTALL | re.MULTILINE,
         )
 

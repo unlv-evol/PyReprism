@@ -19,7 +19,7 @@ class Swift(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/\n]*[^\n]*)', re.DOTALL | re.MULTILINE)
+        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>"(\\.|[^\\"])*"|.[^/"]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

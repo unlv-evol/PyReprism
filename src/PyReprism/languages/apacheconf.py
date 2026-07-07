@@ -100,17 +100,3 @@ class ApacheConf(BaseLanguage):
     @classmethod
     def remove_keywords(cls, source: str):
         return re.sub(cls.keywords_regex(), '', source)
-
-
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        res = super().remove_comments(source_code, isList=isList)
-        if isList:
-            return res
-        return res
-
-    @classmethod
-    def remove_keywords(cls, source: str):
-        return re.sub(cls.keywords_regex(), '', source)
-        return re.sub(re.compile(ApacheConf.keywords_regex()), '', source)

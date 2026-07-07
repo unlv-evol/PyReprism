@@ -17,7 +17,7 @@ class Batch(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        return re.compile(r'(?P<comment>REM.*?$|::.*?$)|(?P<noncomment>[^:R]*[^\n]*)', re.MULTILINE)
+        return re.compile(r'(?P<comment>\bREM\b.*?$|::.*?$)|(?P<noncomment>.[^:R]*)', re.DOTALL | re.MULTILINE | re.IGNORECASE)
 
     @classmethod
     def number_regex(cls):

@@ -1,10 +1,6 @@
 import re
 from PyReprism.utils import extension
 
-
-import re
-from PyReprism.utils import extension
-
 from .base import BaseLanguage
 from .registry import LanguageRegistry
 
@@ -15,7 +11,7 @@ class Perl(BaseLanguage):
 
     @classmethod
     def file_extension(cls) -> str:
-        return extension.pl
+        return extension.perl
 
     @classmethod
     def keywords(cls) -> list:
@@ -72,16 +68,3 @@ class Perl(BaseLanguage):
     @classmethod
     def remove_keywords(cls, source: str) -> str:
         return super().remove_keywords(source)
-    @staticmethod
-    def remove_comments(source_code: str, isList: bool = False) -> str:
-        result = []
-        for match in Perl.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @staticmethod
-    def remove_keywords(source: str):
-        return re.sub(re.compile(Perl.keywords_regex()), '', source)

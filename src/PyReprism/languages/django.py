@@ -50,8 +50,11 @@ class Django(BaseLanguage):
         return re.compile(r'[()\[\]{}.,:;@]')
 
     @classmethod
-    def remove_comments(cls, source_code: str) -> str:
-        # Preserve original scalar behavior (return stripped string)
+    def remove_comments(cls, source_code: str, isList: bool = False):
+        # Preserve original scalar behavior (return stripped string); support
+        # the list form via BaseLanguage for signature consistency.
+        if isList:
+            return super().remove_comments(source_code, isList=True)
         return cls.comment_regex().sub(lambda match: match.group('noncomment') if match.group('noncomment') else '', source_code).strip()
 
     @classmethod

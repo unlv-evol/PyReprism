@@ -17,7 +17,7 @@ class Autoit(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        return re.compile(r'(?P<comment>;.*?$|#cs[\s\S]*?#ce|#cs.*?$|^.*?#ce)|(?P<noncomment>[^;#]*[^\n]*)', re.DOTALL | re.MULTILINE)
+        return re.compile(r'(?P<comment>;.*?$|#(?:cs|comments-start)[\s\S]*?#(?:ce|comments-end))|(?P<noncomment>.[^;#]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

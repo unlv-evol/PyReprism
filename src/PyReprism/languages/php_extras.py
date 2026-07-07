@@ -1,4 +1,3 @@
-import re
 from .php import PHP
 from .registry import LanguageRegistry
 

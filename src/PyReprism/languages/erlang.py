@@ -14,6 +14,10 @@ class ErLang(BaseLanguage):
 
     @classmethod
     def keywords(cls) -> list:
+        """Return a list of Erlang keywords.
+        
+        :rtype: list[str]
+        """
         return []
 
     @classmethod

@@ -1,30 +1,28 @@
 import re
 from PyReprism.utils import extension
 
+from .base import BaseLanguage
+from .registry import LanguageRegistry
 
-class MarkDown:
-    def __init__():
-        pass
 
-    @staticmethod
-    def comment():
+@LanguageRegistry.register
+class MarkDown(BaseLanguage):
+    """Markdown support (embedded HTML ``<!-- -->`` comments)."""
 
-        return re.compile(r'(?P<multilinecomment><!--.*?-->)|(?P<noncomment>\'(\\.|[^\\\'])*\'|"(\\.|[^\\"])*"|.[^/\'"]*)', re.DOTALL | re.MULTILINE)
-
-    @staticmethod
-    def remove_comments(source: str):
-        return re.sub(MarkDown.comment, '', source)
-
-    @staticmethod
-    def file_extension():
+    @classmethod
+    def file_extension(cls) -> str:
+        """:rtype: str"""
         return extension.markdown
 
-    @staticmethod
-    def keywords() -> list:
-        pass
+    @classmethod
+    def keywords(cls) -> list:
+        """:rtype: list[str]"""
+        return []
 
-    @staticmethod
-    def remove_keywords(source: str):
-        keywords = MarkDown.keywords()
-        pattern = r'\b(' + '|'.join(keywords) + r')\b'
-        return re.sub(re.compile(pattern), '', source)
+    @classmethod
+    def comment_regex(cls) -> re.Pattern:
+        """:rtype: re.Pattern"""
+        return re.compile(
+            r'(?P<comment><!--[\s\S]*?-->)|(?P<noncomment>.[^<]*)',
+            re.DOTALL | re.MULTILINE,
+        )

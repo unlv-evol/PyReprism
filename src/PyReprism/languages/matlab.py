@@ -26,4 +26,15 @@ class MatLab(BaseLanguage):
     @classmethod
     def operator_regex(cls):
         return re.compile(r"\.?[*^\/\\']|[+\-:@]|[<>=~]=?|&&?|\|\|?")
+    
+    @classmethod
+    def keywords_regex(cls):
+        return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")   
+    
+    @classmethod
+    def remove_comments(cls, source_code: str, isList: bool = False) -> str:
+        res = super().remove_comments(source_code, isList=isList)
+        if isList:
+            return res
+        return ''.join(res) 
 

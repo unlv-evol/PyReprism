@@ -85,10 +85,10 @@ $ python3 -m venv venv
 $ source venv/bin/activate
 ```
 
-Then, install the requirements:
+Then, install the package in editable mode with its development tooling:
 
 ```shell
-$ pip install -r requirements.txt
+$ pip install -e ".[dev]"
 ```
 For more information on how to contribute, read our [contributing guidelines](CONTRIBUTING.md).
 

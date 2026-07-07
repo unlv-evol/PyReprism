@@ -16,7 +16,7 @@ class Latex(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        return re.compile(r'(?P<comment>%.*?$)|(?P<noncomment>[^%\n]*[^\n]*)', re.MULTILINE)
+        return re.compile(r'(?P<comment>%.*?$)|(?P<noncomment>.[^%]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):
