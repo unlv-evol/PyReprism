@@ -1,18 +1,39 @@
+import bisect
 import re
 from functools import lru_cache
 from typing import List, Pattern, Union
 
+from ..metrics import CodeStats
+from ..tokens import Token, TokenType
+
+# Shared, language-agnostic patterns used by the generic tokenizer.
+_WHITESPACE_RE = re.compile(r'\s+')
+_OPERATOR_RE = re.compile(r'[-+*/%=<>!&|^~?]+')
+
+
+def _newline_offsets(source: str) -> List[int]:
+    return [i for i, ch in enumerate(source) if ch == '\n']
+
+
+def _line_at(newlines: List[int], index: int) -> int:
+    """Return the 1-based line number of ``index`` given precomputed newline offsets."""
+    return bisect.bisect_right(newlines, index) + 1
+
 
 class BaseLanguage:
-    """Minimal base class for language implementations.
+    """Base class for language implementations.
 
-    Subclasses should provide: file_extension(), keywords(), comment_regex(),
-    and may override number_regex(), operator_regex(), keywords_regex().
+    Subclasses must provide :meth:`file_extension` and :meth:`comment_regex`, and
+    typically :meth:`keywords`. They may override :meth:`number_regex`,
+    :meth:`operator_regex`, :meth:`string_regex`, :meth:`identifier_regex`, and
+    :meth:`keywords_regex`.
 
-    This base centralizes implementations for remove_comments and remove_keywords
-    and caches commonly used compiled regexes.
+    This base centralizes the ``remove``/``extract``/``count``/``match`` operations
+    for comments, keywords, numbers, operators, strings and identifiers, plus a
+    generic :meth:`tokenize`, so every language inherits the full API for free.
     """
 
+    # ------------------------------------------------------------------ regexes
     @classmethod
     def file_extension(cls) -> str:
         raise NotImplementedError()
@@ -24,15 +45,15 @@ class BaseLanguage:
     @classmethod
     @lru_cache(maxsize=None)
     def keywords_regex(cls) -> Pattern:
-        words = cls.keywords() or []
+        words = [w for w in (cls.keywords() or []) if w]
         if not words:
             # match nothing
-            return re.compile(r"^$")
+            return re.compile(r"(?!x)x")
         return re.compile(r'\b(' + '|'.join(words) + r')\b', re.IGNORECASE)
 
     @classmethod
     def comment_regex(cls) -> Pattern:
-        """Return a compiled regex that contains named groups 'comment' and 'noncomment'."""
+        """Return a compiled regex with named groups 'comment' and 'noncomment'."""
         raise NotImplementedError()
 
     @classmethod
@@ -41,7 +62,49 @@ class BaseLanguage:
 
     @classmethod
     def operator_regex(cls) -> Pattern:
-        return re.compile(r'.')
+        return re.compile(r'[-+*/%=<>!&|^~?]+')
+
+    @classmethod
+    def string_regex(cls) -> Pattern:
+        """Default string-literal matcher: single- or double-quoted with escapes."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
+
+    @classmethod
+    def identifier_regex(cls) -> Pattern:
+        return re.compile(r'[A-Za-z_]\w*')
+
+    # ---------------------------------------------------------------- internals
+    @classmethod
+    def _match_spans(cls, regex: Pattern, source: str, ttype: TokenType) -> List[Token]:
+        """Return non-empty matches of ``regex`` in ``source`` as :class:`Token`s."""
+        newlines = _newline_offsets(source)
+        tokens = []
+        for m in regex.finditer(source):
+            if m.end() > m.start():  # skip zero-width matches
+                tokens.append(Token(ttype, m.group(), m.start(), m.end(),
+                                    _line_at(newlines, m.start())))
+        return tokens
+
+    # ----------------------------------------------------------------- comments
+    @classmethod
+    def match_comments(cls, source: str) -> List[Token]:
+        """Return every comment in ``source`` as a :class:`Token` with position info."""
+        newlines = _newline_offsets(source)
+        tokens = []
+        for m in cls.comment_regex().finditer(source):
+            # A match is a comment when it did NOT bind the 'noncomment' group.
+            if m.groupdict().get('noncomment') is None and m.end() > m.start():
+                tokens.append(Token(TokenType.COMMENT, m.group(), m.start(), m.end(),
+                                    _line_at(newlines, m.start())))
+        return tokens
+
+    @classmethod
+    def extract_comments(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_comments(source)]
+
+    @classmethod
+    def count_comments(cls, source: str) -> int:
+        return len(cls.match_comments(source))
 
     @classmethod
     def remove_comments(cls, source_code: str, isList: bool = False) -> Union[str, List[str]]:
@@ -50,19 +113,255 @@ class BaseLanguage:
         The regex is expected to provide a 'noncomment' named group for text to keep.
         Returns either the joined string or a list of non-comment segments when isList=True.
         """
-        pattern = cls.comment_regex()
         result = []
-        for match in pattern.finditer(source_code):
+        for match in cls.comment_regex().finditer(source_code):
             non = match.groupdict().get('noncomment')
-            # Append the 'noncomment' group even when it's an empty string.
-            # Use `is not None` to avoid skipping valid empty segments which
-            # may carry whitespace that should be preserved.
             if non is not None:
                 result.append(non)
         if isList:
             return result
         return ''.join(result)
 
+    # ----------------------------------------------------------------- keywords
+    @classmethod
+    def match_keywords(cls, source: str) -> List[Token]:
+        if not [w for w in (cls.keywords() or []) if w]:
+            return []
+        return cls._match_spans(cls.keywords_regex(), source, TokenType.KEYWORD)
+
+    @classmethod
+    def extract_keywords(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_keywords(source)]
+
+    @classmethod
+    def count_keywords(cls, source: str) -> int:
+        return len(cls.match_keywords(source))
+
     @classmethod
     def remove_keywords(cls, source: str) -> str:
         return re.sub(cls.keywords_regex(), '', source)
+
+    # ------------------------------------------------------------------ numbers
+    @classmethod
+    def match_numbers(cls, source: str) -> List[Token]:
+        return cls._match_spans(cls.number_regex(), source, TokenType.NUMBER)
+
+    @classmethod
+    def extract_numbers(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_numbers(source)]
+
+    @classmethod
+    def count_numbers(cls, source: str) -> int:
+        return len(cls.match_numbers(source))
+
+    @classmethod
+    def remove_numbers(cls, source: str) -> str:
+        return re.sub(cls.number_regex(), '', source)
+
+    # ---------------------------------------------------------------- operators
+    @classmethod
+    def match_operators(cls, source: str) -> List[Token]:
+        return cls._match_spans(cls.operator_regex(), source, TokenType.OPERATOR)
+
+    @classmethod
+    def extract_operators(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_operators(source)]
+
+    @classmethod
+    def count_operators(cls, source: str) -> int:
+        return len(cls.match_operators(source))
+
+    @classmethod
+    def remove_operators(cls, source: str) -> str:
+        return re.sub(cls.operator_regex(), '', source)
+
+    # ------------------------------------------------------------------ strings
+    @classmethod
+    def match_strings(cls, source: str) -> List[Token]:
+        return cls._match_spans(cls.string_regex(), source, TokenType.STRING)
+
+    @classmethod
+    def extract_strings(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_strings(source)]
+
+    @classmethod
+    def count_strings(cls, source: str) -> int:
+        return len(cls.match_strings(source))
+
+    @classmethod
+    def remove_strings(cls, source: str) -> str:
+        return re.sub(cls.string_regex(), '', source)
+
+    # -------------------------------------------------------------- identifiers
+    @classmethod
+    def match_identifiers(cls, source: str) -> List[Token]:
+        """Match identifiers (words that are not language keywords)."""
+        kws = {w.lower() for w in (cls.keywords() or []) if w}
+        newlines = _newline_offsets(source)
+        tokens = []
+        for m in cls.identifier_regex().finditer(source):
+            if m.group().lower() in kws:
+                continue
+            tokens.append(Token(TokenType.IDENTIFIER, m.group(), m.start(), m.end(),
+                                _line_at(newlines, m.start())))
+        return tokens
+
+    @classmethod
+    def extract_identifiers(cls, source: str) -> List[str]:
+        return [t.value for t in cls.match_identifiers(source)]
+
+    @classmethod
+    def count_identifiers(cls, source: str) -> int:
+        return len(cls.match_identifiers(source))
+
+    # ----------------------------------------------------------------- tokenize
+    @classmethod
+    def tokenize(cls, source: str) -> List[Token]:
+        """Split ``source`` into a flat list of typed :class:`Token`s.
+
+        Comments (and strings, where the language's ``comment_regex`` keeps them in
+        the non-comment group) are separated first; remaining code is classified
+        into strings, numbers, keywords, identifiers, operators and other
+        single-character tokens. This is best-effort and driven by the language's
+        own regexes.
+        """
+        newlines = _newline_offsets(source)
+        tokens = []
+        pos = 0
+        for m in cls.comment_regex().finditer(source):
+            if m.start() > pos:
+                # Characters the comment regex does not classify (often newlines);
+                # tokenize them as code so nothing is lost.
+                cls._tokenize_code(source[pos:m.start()], pos, newlines, tokens)
+                pos = m.start()
+            if m.end() <= m.start():
+                continue
+            if m.groupdict().get('noncomment') is None:
+                tokens.append(Token(TokenType.COMMENT, m.group(), m.start(), m.end(),
+                                    _line_at(newlines, m.start())))
+            else:
+                cls._tokenize_code(m.group('noncomment'), m.start(), newlines, tokens)
+            pos = m.end()
+        if pos < len(source):
+            cls._tokenize_code(source[pos:], pos, newlines, tokens)
+        return tokens
+
+    @classmethod
+    def _tokenize_code(cls, text: str, base: int, newlines: List[int],
+                       tokens: List[Token]) -> None:
+        strx = cls.string_regex()
+        numx = cls.number_regex()
+        idx = cls.identifier_regex()
+        kws = {w.lower() for w in (cls.keywords() or []) if w}
+        stages = (
+            (_WHITESPACE_RE, TokenType.WHITESPACE),
+            (strx, TokenType.STRING),
+            (numx, TokenType.NUMBER),
+            (idx, None),  # identifier or keyword
+            (_OPERATOR_RE, TokenType.OPERATOR),
+        )
+        i, n = 0, len(text)
+        while i < n:
+            for regex, ttype in stages:
+                m = regex.match(text, i)
+                if m and m.end() > i:
+                    val = m.group()
+                    if ttype is None:
+                        tt = TokenType.KEYWORD if val.lower() in kws else TokenType.IDENTIFIER
+                    else:
+                        tt = ttype
+                    start = base + i
+                    tokens.append(Token(tt, val, start, start + len(val),
+                                        _line_at(newlines, start)))
+                    i = m.end()
+                    break
+            else:
+                start = base + i
+                tokens.append(Token(TokenType.OTHER, text[i], start, start + 1,
+                                    _line_at(newlines, start)))
+                i += 1
+
+    # -------------------------------------------------------------- line-preserving
+    @classmethod
+    def blank_comments(cls, source: str, replacement: str = ' ') -> str:
+        """Remove comment *content* while preserving line numbers.
+
+        Each comment is replaced with ``replacement`` for every non-newline
+        character and its newlines are kept, so downstream line/column mapping
+        stays intact. Use ``replacement=''`` to blank only the content.
+        """
+        result = []
+        pos = 0
+        for tok in cls.match_comments(source):
+            result.append(source[pos:tok.start])
+            result.append(''.join('\n' if ch == '\n' else replacement for ch in tok.value))
+            pos = tok.end
+        result.append(source[pos:])
+        return ''.join(result)
+
+    # --------------------------------------------------------------------- metrics
+    @classmethod
+    def stats(cls, source: str) -> CodeStats:
+        """Compute line- and token-level :class:`CodeStats` for ``source``."""
+        counts = {t: 0 for t in TokenType}
+        code_lines = set()
+        comment_lines = set()
+        for tok in cls.tokenize(source):
+            counts[tok.type] += 1
+            if tok.type is TokenType.WHITESPACE:
+                continue
+            span = range(tok.line, tok.line + tok.value.count('\n') + 1)
+            target = comment_lines if tok.type is TokenType.COMMENT else code_lines
+            target.update(span)
+        total = len(source.splitlines())
+        code = len(code_lines)
+        comment = len(comment_lines - code_lines)
+        blank = max(total - code - comment, 0)
+        return CodeStats(
+            lines=total, code_lines=code, comment_lines=comment, blank_lines=blank,
+            characters=len(source),
+            comment_tokens=counts[TokenType.COMMENT],
+            string_tokens=counts[TokenType.STRING],
+            number_tokens=counts[TokenType.NUMBER],
+            keyword_tokens=counts[TokenType.KEYWORD],
+            identifier_tokens=counts[TokenType.IDENTIFIER],
+            operator_tokens=counts[TokenType.OPERATOR],
+        )
+
+    # ------------------------------------------------------------------ normalize
+    @classmethod
+    def normalize(cls, source: str, *, rename_identifiers: bool = True,
+                  mask_numbers: bool = True, mask_strings: bool = True,
+                  drop_comments: bool = True, collapse_whitespace: bool = False,
+                  identifier_prefix: str = 'VAR', number_placeholder: str = '0',
+                  string_placeholder: str = '"STR"') -> str:
+        """Return a canonicalized form of ``source`` for ML / clone detection.
+
+        By default: comments are dropped; string and number literals are replaced
+        with fixed placeholders; and identifiers are consistently renamed to
+        ``VAR1``, ``VAR2``, ... (keywords are preserved). Toggle each behavior via
+        the keyword arguments; set ``collapse_whitespace`` to reduce every
+        whitespace run to a single space.
+        """
+        mapping = {}
+        parts = []
+        for tok in cls.tokenize(source):
+            t = tok.type
+            if t is TokenType.COMMENT:
+                if not drop_comments:
+                    parts.append(tok.value)
+            elif t is TokenType.STRING and mask_strings:
+                parts.append(string_placeholder)
+            elif t is TokenType.NUMBER and mask_numbers:
+                parts.append(number_placeholder)
+            elif t is TokenType.IDENTIFIER and rename_identifiers:
+                name = mapping.get(tok.value)
+                if name is None:
+                    name = f"{identifier_prefix}{len(mapping) + 1}"
+                    mapping[tok.value] = name
+                parts.append(name)
+            elif t is TokenType.WHITESPACE and collapse_whitespace:
+                parts.append(' ')
+            else:
+                parts.append(tok.value)
+        return ''.join(parts)
