@@ -83,65 +83,100 @@ def _resolve(lang: LanguageLike) -> Type:
     return get_language(lang)
 
 
-def remove_comments(source: str, lang: LanguageLike, isList: bool = False):
+_CONSTRUCT_TYPE = {
+    'comments': TokenType.COMMENT, 'strings': TokenType.STRING,
+    'numbers': TokenType.NUMBER, 'keywords': TokenType.KEYWORD,
+    'operators': TokenType.OPERATOR, 'identifiers': TokenType.IDENTIFIER,
+}
+
+
+def _engine_tokens(source: str, lang: LanguageLike, engine: str) -> List[Token]:
+    from .engines import get_engine
+    return get_engine(engine).tokenize(source, _resolve(lang))
+
+
+def _is_regex(engine) -> bool:
+    return engine in (None, 'regex')
+
+
+def _op(action: str, construct: str, source: str, lang: LanguageLike, engine: str):
+    """Run remove/extract/count for a construct via the selected engine."""
+    if _is_regex(engine):
+        return getattr(_resolve(lang), f'{action}_{construct}')(source)
+    from . import _tokenops
+    tokens = _engine_tokens(source, lang, engine)
+    return getattr(_tokenops, action)(tokens, _CONSTRUCT_TYPE[construct])
+
+
+def remove_comments(source: str, lang: LanguageLike, engine: str = 'regex', isList: bool = False):
     """Remove comments from ``source`` for the given language."""
-    return _resolve(lang).remove_comments(source, isList=isList)
+    if _is_regex(engine):
+        return _resolve(lang).remove_comments(source, isList=isList)
+    tokens = _engine_tokens(source, lang, engine)
+    if isList:
+        return [t.value for t in tokens if t.type is not TokenType.COMMENT]
+    from . import _tokenops
+    return _tokenops.remove(tokens, TokenType.COMMENT)
 
 
-def extract_comments(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_comments(source)
+def extract_comments(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'comments', source, lang, engine)
 
 
-def count_comments(source: str, lang: LanguageLike) -> int:
-    return _resolve(lang).count_comments(source)
+def count_comments(source: str, lang: LanguageLike, engine: str = 'regex') -> int:
+    return _op('count', 'comments', source, lang, engine)
 
 
-def match_comments(source: str, lang: LanguageLike) -> List[Token]:
-    return _resolve(lang).match_comments(source)
+def match_comments(source: str, lang: LanguageLike, engine: str = 'regex') -> List[Token]:
+    if _is_regex(engine):
+        return _resolve(lang).match_comments(source)
+    return [t for t in _engine_tokens(source, lang, engine) if t.type is TokenType.COMMENT]
 
 
-def remove_keywords(source: str, lang: LanguageLike) -> str:
-    return _resolve(lang).remove_keywords(source)
+def remove_keywords(source: str, lang: LanguageLike, engine: str = 'regex') -> str:
+    if _is_regex(engine):
+        return _resolve(lang).remove_keywords(source)
+    return _op('remove', 'keywords', source, lang, engine)
 
 
-def extract_keywords(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_keywords(source)
+def extract_keywords(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'keywords', source, lang, engine)
 
 
-def count_keywords(source: str, lang: LanguageLike) -> int:
-    return _resolve(lang).count_keywords(source)
+def count_keywords(source: str, lang: LanguageLike, engine: str = 'regex') -> int:
+    return _op('count', 'keywords', source, lang, engine)
 
 
-def remove_numbers(source: str, lang: LanguageLike) -> str:
-    return _resolve(lang).remove_numbers(source)
+def remove_numbers(source: str, lang: LanguageLike, engine: str = 'regex') -> str:
+    return _op('remove', 'numbers', source, lang, engine)
 
 
-def extract_numbers(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_numbers(source)
+def extract_numbers(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'numbers', source, lang, engine)
 
 
-def count_numbers(source: str, lang: LanguageLike) -> int:
-    return _resolve(lang).count_numbers(source)
+def count_numbers(source: str, lang: LanguageLike, engine: str = 'regex') -> int:
+    return _op('count', 'numbers', source, lang, engine)
 
 
-def remove_operators(source: str, lang: LanguageLike) -> str:
-    return _resolve(lang).remove_operators(source)
+def remove_operators(source: str, lang: LanguageLike, engine: str = 'regex') -> str:
+    return _op('remove', 'operators', source, lang, engine)
 
 
-def extract_operators(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_operators(source)
+def extract_operators(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'operators', source, lang, engine)
 
 
-def remove_strings(source: str, lang: LanguageLike) -> str:
-    return _resolve(lang).remove_strings(source)
+def remove_strings(source: str, lang: LanguageLike, engine: str = 'regex') -> str:
+    return _op('remove', 'strings', source, lang, engine)
 
 
-def extract_strings(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_strings(source)
+def extract_strings(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'strings', source, lang, engine)
 
 
-def extract_identifiers(source: str, lang: LanguageLike) -> List[str]:
-    return _resolve(lang).extract_identifiers(source)
+def extract_identifiers(source: str, lang: LanguageLike, engine: str = 'regex') -> List[str]:
+    return _op('extract', 'identifiers', source, lang, engine)
 
 
 def remove_whitespaces(source: str) -> str:
@@ -149,27 +184,44 @@ def remove_whitespaces(source: str) -> str:
     return Normalizer.remove_whitespaces(source)
 
 
-def tokenize(source: str, lang: LanguageLike) -> List[Token]:
+def tokenize(source: str, lang: LanguageLike, engine: str = 'regex') -> List[Token]:
     """Return the flat list of typed tokens for ``source``."""
-    return _resolve(lang).tokenize(source)
+    if _is_regex(engine):
+        return _resolve(lang).tokenize(source)
+    return _engine_tokens(source, lang, engine)
 
 
-def blank_comments(source: str, lang: LanguageLike, replacement: str = ' ') -> str:
+def blank_comments(source: str, lang: LanguageLike, replacement: str = ' ',
+                   engine: str = 'regex') -> str:
     """Remove comment content while preserving line numbers."""
-    return _resolve(lang).blank_comments(source, replacement=replacement)
+    if _is_regex(engine):
+        return _resolve(lang).blank_comments(source, replacement=replacement)
+    parts = []
+    for tok in _engine_tokens(source, lang, engine):
+        if tok.type is TokenType.COMMENT:
+            parts.append(''.join('\n' if ch == '\n' else replacement for ch in tok.value))
+        else:
+            parts.append(tok.value)
+    return ''.join(parts)
 
 
-def stats(source: str, lang: LanguageLike) -> CodeStats:
+def stats(source: str, lang: LanguageLike, engine: str = 'regex') -> CodeStats:
     """Return line- and token-level :class:`CodeStats` for ``source``."""
-    return _resolve(lang).stats(source)
+    if _is_regex(engine):
+        return _resolve(lang).stats(source)
+    from . import _tokenops
+    return _tokenops.stats(_engine_tokens(source, lang, engine), source)
 
 
-def normalize(source: str, lang: LanguageLike, **options) -> str:
+def normalize(source: str, lang: LanguageLike, engine: str = 'regex', **options) -> str:
     """Return a canonicalized form of ``source`` for ML / clone detection.
 
     See :meth:`PyReprism.languages.base.BaseLanguage.normalize` for options.
     """
-    return _resolve(lang).normalize(source, **options)
+    if _is_regex(engine):
+        return _resolve(lang).normalize(source, **options)
+    from . import _tokenops
+    return _tokenops.normalize(_engine_tokens(source, lang, engine), **options)
 
 
 _STEPS = {
@@ -182,20 +234,35 @@ _STEPS = {
 }
 
 
-def preprocess(source: str, lang: LanguageLike, steps: Sequence[str] = ('comments',)) -> str:
+def preprocess(source: str, lang: LanguageLike, steps: Sequence[str] = ('comments',),
+               engine: str = 'regex') -> str:
     """Apply a sequence of removal ``steps`` in order and return the result.
 
     Valid steps: ``comments``, ``strings``, ``numbers``, ``operators``,
     ``keywords``, ``whitespace``.
     """
-    cls = _resolve(lang)
+    if steps is None:
+        steps = ('comments',)
+    if _is_regex(engine):
+        cls = _resolve(lang)
+        out = source
+        for step in steps:
+            fn = _STEPS.get(step)
+            if fn is None:
+                raise ValueError(f"Unknown preprocessing step: {step!r}. "
+                                 f"Valid steps: {', '.join(sorted(_STEPS))}")
+            out = fn(cls, out)
+        return out
+    from . import _tokenops
     out = source
     for step in steps:
-        fn = _STEPS.get(step)
-        if fn is None:
+        if step == 'whitespace':
+            out = Normalizer.remove_whitespaces(out)
+        elif step in _CONSTRUCT_TYPE:
+            out = _tokenops.remove(_engine_tokens(out, lang, engine), _CONSTRUCT_TYPE[step])
+        else:
             raise ValueError(f"Unknown preprocessing step: {step!r}. "
                              f"Valid steps: {', '.join(sorted(_STEPS))}")
-        out = fn(cls, out)
     return out
 
 

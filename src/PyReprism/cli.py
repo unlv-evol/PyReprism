@@ -16,25 +16,50 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, detect_language, get_language, preprocess
+from . import __version__, _tokenops, detect_language, get_language, preprocess
+from .engines import get_engine
+from .tokens import TokenType
 
 CONSTRUCTS = ['comments', 'keywords', 'numbers', 'operators', 'strings', 'identifiers']
+_CONSTRUCT_TYPE = {
+    'comments': TokenType.COMMENT, 'keywords': TokenType.KEYWORD,
+    'numbers': TokenType.NUMBER, 'operators': TokenType.OPERATOR,
+    'strings': TokenType.STRING, 'identifiers': TokenType.IDENTIFIER,
+}
 
 
 def _iter_inputs(paths: List[str]):
-    """Yield ``(label, text, filename)`` for each input; filename is None for stdin."""
+    """Yield ``(label, text, filename, base)`` for each input.
+
+    ``filename`` and ``base`` are None for stdin. Directories are walked for
+    supported source files (``base`` is the directory, for output mirroring).
+    """
+    import os
+
+    from .batch import iter_source_files
+
     if not paths:
-        yield ('<stdin>', sys.stdin.read(), None)
+        yield ('<stdin>', sys.stdin.read(), None, None)
         return
     for pattern in paths:
+        if os.path.isdir(pattern):
+            for base, path, _cls in iter_source_files(pattern):
+                try:
+                    yield (str(path), path.read_text(encoding='utf-8', errors='replace'),
+                           str(path), str(base))
+                except OSError as exc:
+                    print(f"pyreprism: {exc}", file=sys.stderr)
+            continue
         matches = glob.glob(pattern, recursive=True) if any(c in pattern for c in '*?[') else [pattern]
         if not matches:
             print(f"pyreprism: no such file: {pattern}", file=sys.stderr)
             continue
         for filepath in matches:
+            if os.path.isdir(filepath):
+                continue
             try:
                 with open(filepath, 'r', encoding='utf-8') as handle:
-                    yield (filepath, handle.read(), filepath)
+                    yield (filepath, handle.read(), filepath, None)
             except OSError as exc:
                 print(f"pyreprism: {exc}", file=sys.stderr)
 
@@ -50,35 +75,45 @@ def _resolve(lang: Optional[str], filename: Optional[str]):
     raise SystemExit(2)
 
 
-def _method(cls, action: str, construct: str):
-    fn = getattr(cls, f'{action}_{construct}', None)
-    if fn is None:
-        raise SystemExit(f"pyreprism: '{action} {construct}' is not supported")
-    return fn
+def _multiple(paths) -> bool:
+    """True when the inputs are expected to expand to more than one file."""
+    import os
+    return len(paths) > 1 or any(os.path.isdir(p) for p in paths)
+
+
+def _op(cls, action: str, construct: str, text: str, engine: str):
+    """Run remove/extract/count for a construct via the selected engine."""
+    if engine in (None, 'regex'):
+        fn = getattr(cls, f'{action}_{construct}', None)
+        if fn is None:
+            raise SystemExit(f"pyreprism: '{action} {construct}' is not supported")
+        return fn(text)
+    tokens = get_engine(engine).tokenize(text, cls)
+    return getattr(_tokenops, action)(tokens, _CONSTRUCT_TYPE[construct])
 
 
 def _cmd_remove(args) -> int:
-    for label, text, filename in _iter_inputs(args.paths):
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        result = _method(cls, 'remove', args.construct)(text)
-        _emit(result, filename, args.in_place, args)
+        result = _op(cls, 'remove', args.construct, text, args.engine)
+        _emit(result, filename, base, args)
     return 0
 
 
 def _cmd_preprocess(args) -> int:
     steps = [s.strip() for s in args.steps.split(',') if s.strip()]
-    for label, text, filename in _iter_inputs(args.paths):
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        result = preprocess(text, lang=cls, steps=steps)
-        _emit(result, filename, args.in_place, args)
+        result = preprocess(text, lang=cls, steps=steps, engine=args.engine)
+        _emit(result, filename, base, args)
     return 0
 
 
 def _cmd_extract(args) -> int:
-    multiple = len(args.paths) > 1
-    for label, text, filename in _iter_inputs(args.paths):
+    multiple = _multiple(args.paths)
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        items = _method(cls, 'extract', args.construct)(text)
+        items = _op(cls, 'extract', args.construct, text, args.engine)
         if args.json:
             print(json.dumps({label: items} if multiple else items))
         else:
@@ -90,17 +125,17 @@ def _cmd_extract(args) -> int:
 
 
 def _cmd_count(args) -> int:
-    for label, text, filename in _iter_inputs(args.paths):
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        count = _method(cls, 'count', args.construct)(text)
-        print(f"{count}\t{label}" if len(args.paths) > 1 else count)
+        count = _op(cls, 'count', args.construct, text, args.engine)
+        print(f"{count}\t{label}" if _multiple(args.paths) else count)
     return 0
 
 
 def _cmd_tokenize(args) -> int:
-    for label, text, filename in _iter_inputs(args.paths):
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        tokens = cls.tokenize(text)
+        tokens = get_engine(args.engine).tokenize(text, cls)
         if args.json:
             print(json.dumps([
                 {'type': t.type.value, 'value': t.value,
@@ -114,10 +149,13 @@ def _cmd_tokenize(args) -> int:
 
 
 def _cmd_stats(args) -> int:
-    multiple = len(args.paths) > 1
-    for label, text, filename in _iter_inputs(args.paths):
+    multiple = _multiple(args.paths)
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        data = cls.stats(text).as_dict()
+        if args.engine in (None, 'regex'):
+            data = cls.stats(text).as_dict()
+        else:
+            data = _tokenops.stats(get_engine(args.engine).tokenize(text, cls), text).as_dict()
         if args.json:
             print(json.dumps({label: data} if multiple else data))
         else:
@@ -137,10 +175,46 @@ def _cmd_normalize(args) -> int:
         rename_identifiers=not args.keep_names,
         collapse_whitespace=args.collapse_whitespace,
     )
-    for label, text, filename in _iter_inputs(args.paths):
+    for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename)
-        result = cls.normalize(text, **options)
-        _emit(result, filename, args.in_place, args)
+        if args.engine in (None, 'regex'):
+            result = cls.normalize(text, **options)
+        else:
+            result = _tokenops.normalize(get_engine(args.engine).tokenize(text, cls), **options)
+        _emit(result, filename, base, args)
+    return 0
+
+
+def _cmd_scan(args) -> int:
+    from .batch import analyze
+
+    report = analyze(args.paths, engine=args.engine, recursive=not args.no_recursive,
+                     include=args.include, exclude=args.exclude)
+    if args.json:
+        print(report.to_json())
+        return 0
+    if args.csv:
+        print(report.to_csv(), end='')
+        return 0
+
+    if args.per_file:
+        for f in report.ok:
+            print(f"{f.path}\t{f.language}\t{f.stats.code_lines} code, "
+                  f"{f.stats.comment_lines} comment")
+        print()
+    by_lang = report.by_language()
+    if by_lang:
+        width = max(len(name) for name in by_lang)
+        print(f"{'language'.ljust(width)}  files  code  comment  blank")
+        for name, agg in by_lang.items():
+            print(f"{name.ljust(width)}  {agg['files']:>5}  {agg['code_lines']:>4}  "
+                  f"{agg['comment_lines']:>7}  {agg['blank_lines']:>5}")
+    totals = report.totals()
+    print(f"\n{totals['files']} files, {totals['lines']} lines "
+          f"({totals['code_lines']} code, {totals['comment_lines']} comment, "
+          f"{totals['blank_lines']} blank)")
+    if report.errors:
+        print(f"{len(report.errors)} file(s) could not be processed", file=sys.stderr)
     return 0
 
 
@@ -163,8 +237,21 @@ def _cmd_languages(args) -> int:
     return 0
 
 
-def _emit(result: str, filename: Optional[str], in_place: bool, args) -> None:
-    if in_place and filename:
+def _emit(result: str, filename: Optional[str], base: Optional[str], args) -> None:
+    import os
+
+    output = getattr(args, 'output', None)
+    if output and filename:
+        src = os.path.abspath(filename)
+        if base and os.path.isdir(base):
+            rel = os.path.relpath(src, os.path.abspath(base))
+        else:
+            rel = os.path.basename(src)
+        dest = os.path.join(output, rel)
+        os.makedirs(os.path.dirname(dest) or '.', exist_ok=True)
+        with open(dest, 'w', encoding='utf-8') as handle:
+            handle.write(result)
+    elif getattr(args, 'in_place', False) and filename:
         with open(filename, 'w', encoding='utf-8') as handle:
             handle.write(result)
     else:
@@ -188,12 +275,21 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument('-l', '--lang',
                            help='language name, extension, or class (auto-detected from '
                                 'filename when omitted)')
+            p.add_argument('-e', '--engine', default='regex',
+                           choices=['regex', 'pygments', 'auto'],
+                           help="tokenization backend (default: regex; 'pygments' is more "
+                                "accurate but needs pyreprism[accurate])")
+
+    def add_output(p):
+        p.add_argument('-i', '--in-place', action='store_true',
+                       help='rewrite files in place instead of printing to stdout')
+        p.add_argument('-o', '--output', metavar='DIR',
+                       help='write results into DIR, mirroring the input tree')
 
     p_remove = sub.add_parser('remove', help='remove a construct from the source')
     p_remove.add_argument('construct', choices=[c for c in CONSTRUCTS if c != 'identifiers'])
     add_common(p_remove)
-    p_remove.add_argument('-i', '--in-place', action='store_true',
-                          help='rewrite files in place instead of printing to stdout')
+    add_output(p_remove)
     p_remove.set_defaults(func=_cmd_remove)
 
     p_pre = sub.add_parser('preprocess', help='apply a sequence of removal steps')
@@ -201,7 +297,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help='comma-separated steps: comments,strings,numbers,operators,'
                             'keywords,whitespace')
     add_common(p_pre)
-    p_pre.add_argument('-i', '--in-place', action='store_true')
+    add_output(p_pre)
     p_pre.set_defaults(func=_cmd_preprocess)
 
     p_extract = sub.add_parser('extract', help='extract occurrences of a construct')
@@ -234,8 +330,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_norm.add_argument('--keep-names', action='store_true',
                         help='do not rename identifiers')
     p_norm.add_argument('--collapse-whitespace', action='store_true')
-    p_norm.add_argument('-i', '--in-place', action='store_true')
+    add_output(p_norm)
     p_norm.set_defaults(func=_cmd_normalize)
+
+    p_scan = sub.add_parser('scan',
+                            help='walk directories and report aggregate metrics')
+    p_scan.add_argument('paths', nargs='+', help='directories or files to scan')
+    p_scan.add_argument('-e', '--engine', default='regex',
+                        choices=['regex', 'pygments', 'auto'])
+    p_scan.add_argument('--json', action='store_true', help='emit the full JSON report')
+    p_scan.add_argument('--csv', action='store_true', help='emit per-file CSV')
+    p_scan.add_argument('--per-file', action='store_true',
+                        help='include a per-file breakdown in the text report')
+    p_scan.add_argument('--include', action='append', metavar='GLOB',
+                        help='only include files matching GLOB (repeatable)')
+    p_scan.add_argument('--exclude', action='append', metavar='GLOB',
+                        help='skip files matching GLOB (repeatable)')
+    p_scan.add_argument('--no-recursive', action='store_true',
+                        help='do not descend into subdirectories')
+    p_scan.set_defaults(func=_cmd_scan)
 
     p_langs = sub.add_parser('languages', help='list supported languages and extensions')
     p_langs.set_defaults(func=_cmd_languages)

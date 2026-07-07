@@ -105,6 +105,42 @@ numbers stable (useful for tools that map back to source):
 pr.blank_comments(source, lang="python")   # comment content removed, newlines kept
 ```
 
+### Accuracy: choose a backend
+
+By default PyReprism uses its own zero-dependency regex engine (fast, no installs).
+For higher accuracy — e.g. correctly ignoring a `#` inside a string — pass
+`engine="pygments"` (install the optional extra with `pip install pyreprism[accurate]`):
+
+```python
+src = 'url = "http://x#frag"  # real comment'
+
+pr.remove_comments(src, lang="python")                     # regex (default)
+pr.remove_comments(src, lang="python", engine="pygments")  # keeps the URL, drops the comment
+```
+
+`engine` accepts `"regex"` (default), `"pygments"`, or `"auto"` (use pygments if
+installed, else regex). It works on every operation — `remove_*`, `extract_*`,
+`count_*`, `tokenize`, `normalize`, `stats`, `preprocess` — and on the CLI via
+`--engine`.
+
+### Batch / whole-directory processing
+
+Analyze or transform an entire source tree (junk folders like `.git`,
+`node_modules`, `venv` are skipped automatically):
+
+```python
+from PyReprism import batch
+
+report = batch.analyze("myproject/")     # walk the tree, compute metrics
+report.totals()                          # aggregate line/token counts
+report.by_language()                     # per-language breakdown
+report.to_json(); report.to_csv()        # export for dataframes / notebooks
+
+# Bulk-transform into a mirrored output directory:
+batch.transform("myproject/", lambda text, lang: lang.remove_comments(text),
+                output="stripped/")
+```
+
 ### Detect the language from a filename
 
 ```python
@@ -139,6 +175,8 @@ pyreprism tokenize --json file.py
 pyreprism stats --json file.py                 # line/token metrics
 pyreprism normalize file.py                    # canonicalize for ML
 pyreprism remove comments --in-place file.py   # rewrite in place
+pyreprism scan myproject/ --csv                # aggregate metrics over a tree
+pyreprism remove comments src/ --output out/   # bulk-transform a directory
 pyreprism languages                            # list supported languages
 ```
 

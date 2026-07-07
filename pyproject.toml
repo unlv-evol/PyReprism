@@ -28,10 +28,14 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+accurate = [
+  "pygments",
+]
 dev = [
   "flake8",
   "pytest",
   "pytest-cov",
+  "pygments",
 ]
 docs = [
   "sphinx",
