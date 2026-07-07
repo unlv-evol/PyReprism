@@ -60,15 +60,39 @@ def _load_all_languages() -> None:
             continue
 
 
+# For extensions shared by several languages, prefer the canonical/primary one.
+_PREFERRED_LANGUAGE = {
+    '.py': 'Python',
+    '.h': 'C',
+    '.r': 'R',
+    '.pl': 'Perl',
+    '.ts': 'TypeScript',
+    '.php': 'PHP',
+    '.sql': 'SQL',
+    '.vb': 'Vbnet',
+    '.js': 'JavaScript',
+}
+
+
 def get_language_by_extension(ext: str) -> Optional[Type[BaseLanguage]]:
-    """Return the first registered language class whose ``file_extension()`` matches ``ext``.
+    """Return a registered language class whose ``file_extension()`` matches ``ext``.
 
     All language modules are imported on first call so cold lookups succeed. Some
     extensions are shared by several languages (``.py`` -> Python/Django, ``.m`` ->
-    MatLab/ObjectiveC); in those cases the first registered match is returned.
+    MatLab/ObjectiveC); a small preference table picks the canonical language for the
+    common cases, otherwise the first registered match is returned.
     """
     _load_all_languages()
-    for cls in LanguageRegistry.all().values():
+    registry = LanguageRegistry.all()
+    preferred = _PREFERRED_LANGUAGE.get(ext)
+    if preferred:
+        cls = registry.get(preferred)
+        try:
+            if cls is not None and cls.file_extension() == ext:
+                return cls
+        except Exception:
+            pass
+    for cls in registry.values():
         try:
             if cls.file_extension() == ext:
                 return cls
