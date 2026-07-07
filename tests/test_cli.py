@@ -36,7 +36,10 @@ def test_remove_comments_file_autodetect(tmp_path, monkeypatch, capsys):
 def test_remove_in_place(tmp_path, monkeypatch, capsys):
     f = tmp_path / 'b.py'
     f.write_text('z = 3  # gone\n')
-    code, out, err = run(['remove', 'comments', '--in-place', str(f)],
+    # Options go after positionals: argparse on Python <= 3.11 only matches
+    # positionals in the first contiguous block, so a flag between the construct
+    # and the path would drop the path ("unrecognized arguments").
+    code, out, err = run(['remove', 'comments', str(f), '--in-place'],
                          monkeypatch=monkeypatch, capsys=capsys)
     assert code == 0
     assert 'gone' not in f.read_text()

@@ -200,12 +200,12 @@ files, and globs; the language is auto-detected from a file's extension):
 pyreprism remove comments file.py
 cat file.go | pyreprism remove comments --lang go
 pyreprism extract comments "src/**/*.py" --json
-pyreprism count comments --lang python file.py
+pyreprism count comments file.py --lang python
 pyreprism preprocess --steps comments,strings,whitespace file.java
 pyreprism tokenize --json file.py
 pyreprism stats --json file.py                 # line/token metrics
 pyreprism normalize file.py                    # canonicalize for ML
-pyreprism remove comments --in-place file.py   # rewrite in place
+pyreprism remove comments file.py --in-place   # rewrite in place
 pyreprism scan myproject/ --csv                # aggregate metrics over a tree
 pyreprism remove comments src/ --output out/   # bulk-transform a directory
 pyreprism languages                            # list supported languages

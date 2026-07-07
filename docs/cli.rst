@@ -17,7 +17,7 @@ Common usage
    pyreprism remove comments file.py
    cat file.go | pyreprism remove comments --lang go
    pyreprism extract comments "src/**/*.py" --json
-   pyreprism count comments --lang python file.py
+   pyreprism count comments file.py --lang python
    pyreprism preprocess --steps comments,strings,whitespace file.java
    pyreprism tokenize --json file.py
    pyreprism normalize file.py
