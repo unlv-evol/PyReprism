@@ -21,11 +21,11 @@ class Ruby(BaseLanguage):
 
     @classmethod
     def number_regex(cls):
-        return ''
+        return re.compile(r'\b0x[\da-fA-F]+\b|\b0b[01]+\b|(?:\b\d[\d_]*\.?\d*|\B\.\d+)(?:[eE][+-]?\d+)?')
 
     @classmethod
     def operator_regex(cls):
-        return ''
+        return re.compile(r'\*\*=?|<=>|===?|=~|!~|<<|>>|&&|\|\||\.\.\.?|::|[-+*/%=<>!&|^~]=?')
 
     @classmethod
     def remove_comments(cls, source_code: str, isList: bool = False) -> str:
