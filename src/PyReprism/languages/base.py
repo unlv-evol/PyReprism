@@ -303,65 +303,21 @@ class BaseLanguage:
     @classmethod
     def stats(cls, source: str) -> CodeStats:
         """Compute line- and token-level :class:`CodeStats` for ``source``."""
-        counts = {t: 0 for t in TokenType}
-        code_lines = set()
-        comment_lines = set()
-        for tok in cls.tokenize(source):
-            counts[tok.type] += 1
-            if tok.type is TokenType.WHITESPACE:
-                continue
-            span = range(tok.line, tok.line + tok.value.count('\n') + 1)
-            target = comment_lines if tok.type is TokenType.COMMENT else code_lines
-            target.update(span)
-        total = len(source.splitlines())
-        code = len(code_lines)
-        comment = len(comment_lines - code_lines)
-        blank = max(total - code - comment, 0)
-        return CodeStats(
-            lines=total, code_lines=code, comment_lines=comment, blank_lines=blank,
-            characters=len(source),
-            comment_tokens=counts[TokenType.COMMENT],
-            string_tokens=counts[TokenType.STRING],
-            number_tokens=counts[TokenType.NUMBER],
-            keyword_tokens=counts[TokenType.KEYWORD],
-            identifier_tokens=counts[TokenType.IDENTIFIER],
-            operator_tokens=counts[TokenType.OPERATOR],
-        )
+        from .. import _tokenops
+        return _tokenops.stats(cls.tokenize(source), source)
 
     # ------------------------------------------------------------------ normalize
     @classmethod
-    def normalize(cls, source: str, *, rename_identifiers: bool = True,
-                  mask_numbers: bool = True, mask_strings: bool = True,
-                  drop_comments: bool = True, collapse_whitespace: bool = False,
-                  identifier_prefix: str = 'VAR', number_placeholder: str = '0',
-                  string_placeholder: str = '"STR"') -> str:
+    def normalize(cls, source: str, **options) -> str:
         """Return a canonicalized form of ``source`` for ML / clone detection.
 
         By default: comments are dropped; string and number literals are replaced
         with fixed placeholders; and identifiers are consistently renamed to
-        ``VAR1``, ``VAR2``, ... (keywords are preserved). Toggle each behavior via
-        the keyword arguments; set ``collapse_whitespace`` to reduce every
-        whitespace run to a single space.
+        ``VAR1``, ``VAR2``, ... (keywords are preserved). Options mirror
+        :func:`PyReprism._tokenops.normalize` (``rename_identifiers``,
+        ``mask_numbers``, ``mask_strings``, ``drop_comments``,
+        ``collapse_whitespace``, ``identifier_prefix``, ``number_placeholder``,
+        ``string_placeholder``).
         """
-        mapping = {}
-        parts = []
-        for tok in cls.tokenize(source):
-            t = tok.type
-            if t is TokenType.COMMENT:
-                if not drop_comments:
-                    parts.append(tok.value)
-            elif t is TokenType.STRING and mask_strings:
-                parts.append(string_placeholder)
-            elif t is TokenType.NUMBER and mask_numbers:
-                parts.append(number_placeholder)
-            elif t is TokenType.IDENTIFIER and rename_identifiers:
-                name = mapping.get(tok.value)
-                if name is None:
-                    name = f"{identifier_prefix}{len(mapping) + 1}"
-                    mapping[tok.value] = name
-                parts.append(name)
-            elif t is TokenType.WHITESPACE and collapse_whitespace:
-                parts.append(' ')
-            else:
-                parts.append(tok.value)
-        return ''.join(parts)
+        from .. import _tokenops
+        return _tokenops.normalize(cls.tokenize(source), **options)
