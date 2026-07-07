@@ -141,6 +141,37 @@ batch.transform("myproject/", lambda text, lang: lang.remove_comments(text),
                 output="stripped/")
 ```
 
+### Process diffs / pull requests
+
+Parse a unified (`git`) diff and analyze the *changed code* per file, language-aware:
+
+```python
+from PyReprism import diffs
+
+d = diffs.parse(diff_text)          # git diff / .diff / .patch text
+
+report = diffs.diff_stats(d)        # churn split into code vs comment vs blank
+report.totals(); report.to_csv()
+
+diffs.cosmetic_files(d)             # files whose change is comment/whitespace-only
+
+f = d.files[0]
+f.language                          # detected from the file path
+f.added_text(); f.removed_text()    # reconstructed changed code
+f.normalize("added")               # canonicalize the added code for ML
+f.extract_comments("added")
+```
+
+For accuracy where a comment/string spans a hunk boundary, set
+`f.new_source` / `f.old_source` to the full file contents (e.g. from `git show`)
+and the changed lines are classified against the whole file. On the CLI:
+
+```shell
+git diff | pyreprism diff --per-file      # churn report
+git diff | pyreprism diff --json
+git diff | pyreprism diff --cosmetic      # list comment/whitespace-only changes
+```
+
 ### Detect the language from a filename
 
 ```python

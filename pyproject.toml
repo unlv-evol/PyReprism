@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.0.4"
+version = "0.1.0"
 authors = [
   { name = "UNLV EVOL LAB", email = "ogenrwot@unlv.nevada.edu" },
 ]
@@ -36,6 +36,8 @@ dev = [
   "pytest",
   "pytest-cov",
   "pygments",
+  "build",
+  "twine",
 ]
 docs = [
   "sphinx",
@@ -61,7 +63,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["src/tests"]
+testpaths = ["tests"]
 addopts = "--cov=src/PyReprism --cov-report=term"
 
 [tool.coverage.run]

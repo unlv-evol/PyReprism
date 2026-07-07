@@ -1,6 +1,0 @@
-# PyReprism has no runtime dependencies (Python standard library only).
-#
-# For development tooling (tests, linting) install the project with its
-# optional "dev" extras instead:
-#
-#     pip install -e ".[dev]"

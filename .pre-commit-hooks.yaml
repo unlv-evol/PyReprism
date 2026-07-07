@@ -3,7 +3,7 @@
 # Add to your .pre-commit-config.yaml, e.g.:
 #
 #   - repo: https://github.com/unlv-evol/PyReprism
-#     rev: v0.0.4
+#     rev: v0.1.0
 #     hooks:
 #       - id: pyreprism-strip-comments
 #         files: ^generated/           # scope it! these hooks rewrite files
