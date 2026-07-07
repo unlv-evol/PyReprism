@@ -21,7 +21,7 @@ from .metrics import CodeStats
 from .tokens import Token, TokenType
 from .utils.normalizer import Normalizer
 
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 
 LanguageLike = Union[str, "type"]
 
@@ -63,18 +63,79 @@ def get_language(lang: LanguageLike) -> Type:
     raise ValueError(f"Unknown language: {lang!r}")
 
 
-def detect_language(filename: Optional[str] = None, source: Optional[str] = None) -> Optional[Type]:
-    """Infer a language class from ``filename`` (by extension or basename).
+# Interpreter substrings found in a ``#!`` shebang -> registry class name.
+_SHEBANG_LANGUAGES = [
+    ('python', 'Python'), ('pypy', 'Python'),
+    ('nodejs', 'JavaScript'), ('node', 'JavaScript'),
+    ('ruby', 'Ruby'), ('perl', 'Perl'), ('php', 'PHP'),
+    ('rscript', 'R'), ('groovy', 'Groovy'), ('lua', 'LUA'),
+    ('tclsh', 'Tcl'), ('wish', 'Tcl'),
+    ('bash', 'Bash'), ('zsh', 'Bash'), ('ksh', 'Bash'), ('/sh', 'Bash'),
+]
 
-    ``source``-based detection is not yet implemented and is accepted for
-    forward compatibility. Returns ``None`` when no language matches.
+
+def _detect_from_shebang(source: str) -> Optional[Type]:
+    stripped = source.lstrip()
+    first = stripped.splitlines()[0] if stripped else ''
+    if not first.startswith('#!'):
+        return None
+    from .languages import _load_all_languages
+    from .languages.registry import LanguageRegistry
+    line = first.lower()
+    for token, name in _SHEBANG_LANGUAGES:
+        if token in line:
+            _load_all_languages()
+            cls = LanguageRegistry.get(name)
+            if cls is not None:
+                return cls
+    return None
+
+
+def _guess_with_pygments(source: str) -> Optional[Type]:
+    try:
+        from pygments.lexers import guess_lexer
+        from pygments.util import ClassNotFound
+    except ImportError:
+        return None
+    from .languages import get_language_by_extension
+    try:
+        lexer = guess_lexer(source)
+    except ClassNotFound:
+        return None
+    for alias in getattr(lexer, 'aliases', []):
+        try:
+            return get_language(alias)
+        except ValueError:
+            continue
+    for pattern in getattr(lexer, 'filenames', []):
+        ext = os.path.splitext(pattern)[1]
+        if ext:
+            cls = get_language_by_extension(ext)
+            if cls is not None:
+                return cls
+    return None
+
+
+def detect_language(filename: Optional[str] = None, source: Optional[str] = None) -> Optional[Type]:
+    """Infer a language class from a ``filename`` and/or a ``source`` string.
+
+    Resolution order: filename extension, then (if ``source`` is given) a ``#!``
+    shebang line, then a best-effort Pygments content guess when Pygments is
+    installed. Returns ``None`` when nothing matches.
     """
     from .languages import get_language_by_extension
 
     if filename:
         base = os.path.basename(filename)
         _, ext = os.path.splitext(base)
-        return get_language_by_extension(ext or base)
+        cls = get_language_by_extension(ext or base)
+        if cls is not None:
+            return cls
+    if source:
+        cls = _detect_from_shebang(source)
+        if cls is not None:
+            return cls
+        return _guess_with_pygments(source)
     return None
 
 
