@@ -17,8 +17,9 @@ class Eiffel(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        # Eiffel uses -- for line comments and { ... } block comments; conservative pattern
-        pattern = re.compile(r'(?P<comment>--.*?$|\{[\s\S]*?\})|(?P<noncomment>[^\n]+)', re.DOTALL | re.MULTILINE)
+        # Eiffel uses -- for line comments; strings are double-quoted.
+        pattern = re.compile(r'(?P<comment>--.*?$)|(?P<noncomment>"[^"\n]*"|.[^"-]*)',
+                             re.DOTALL | re.MULTILINE)
         return pattern
 
     @classmethod

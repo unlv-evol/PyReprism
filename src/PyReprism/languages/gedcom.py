@@ -25,7 +25,7 @@ class Gedcom(BaseLanguage):
 	@classmethod
 	def comment_regex(cls):
 		# GEDCOM has numeric-level lines; no formal comment token, but accept lines starting with "0" or "1" as data; treat lines starting with "#" as comment for safety
-		return re.compile(r'(?P<comment>^#.*?$)|(?P<noncomment>^[^#\n].*?$)', re.MULTILINE)
+		return re.compile(r'(?P<comment>^#.*?$)|(?P<noncomment>.[^\n]*|\n)', re.MULTILINE)
 
 	@classmethod
 	def remove_comments(cls, source_code: str, isList: bool = False):

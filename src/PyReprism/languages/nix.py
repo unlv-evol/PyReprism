@@ -20,7 +20,7 @@ class NIX(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        return re.compile(r'(?P<comment>^#.*?$)|(?P<noncomment>^[^#\n].*?$)', re.MULTILINE)
+        return re.compile(r'(?P<comment>#.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>"[^"\n]*"|.[^#/"]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):
