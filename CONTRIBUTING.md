@@ -63,3 +63,8 @@ When you're finished with the changes, create a pull request, also known as a PR
 
 Congratulations :tada: :tada: <br />
 The PyReprism team thanks you :sparkles:.
+
+## Maintainers: cutting a release
+
+Releases are automated by pushing a `vX.Y.Z` tag. See [RELEASING.md](RELEASING.md)
+for the full process.

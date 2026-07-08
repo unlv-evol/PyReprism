@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyReprism"
-version = "0.1.0"
+dynamic = ["version"]
 authors = [
   { name = "UNLV EVOL LAB", email = "ogenrwot@unlv.nevada.edu" },
 ]
@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
@@ -51,6 +52,10 @@ pyreprism = "PyReprism.cli:main"
 Homepage = "https://github.com/unlv-evol/PyReprism"
 Documentation = "https://pyreprism.readthedocs.io"
 Issues = "https://github.com/unlv-evol/PyReprism/issues"
+
+# Single source of truth for the version: __version__ in the package __init__.
+[tool.hatch.version]
+path = "src/PyReprism/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/PyReprism"]
