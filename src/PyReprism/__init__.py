@@ -17,7 +17,7 @@ import importlib
 import os
 from typing import List, Optional, Sequence, Type, Union
 
-from .metrics import CodeStats
+from .metrics import CodeStats, Halstead
 from .tokens import Token, TokenType
 from .utils.normalizer import Normalizer
 
@@ -274,6 +274,46 @@ def stats(source: str, lang: LanguageLike, engine: str = 'regex') -> CodeStats:
     return _tokenops.stats(_engine_tokens(source, lang, engine), source)
 
 
+def halstead(source: str, lang: LanguageLike, engine: str = 'regex') -> Halstead:
+    """Return the :class:`Halstead` complexity measures for ``source``."""
+    if _is_regex(engine):
+        return _resolve(lang).halstead(source)
+    from . import _tokenops
+    return _tokenops.halstead(_engine_tokens(source, lang, engine))
+
+
+def cyclomatic_complexity(source: str, lang: LanguageLike, engine: str = 'regex') -> int:
+    """Approximate McCabe cyclomatic complexity (token-based)."""
+    if _is_regex(engine):
+        return _resolve(lang).cyclomatic_complexity(source)
+    from . import _tokenops
+    return _tokenops.cyclomatic(_engine_tokens(source, lang, engine))
+
+
+def maintainability_index(source: str, lang: LanguageLike, engine: str = 'regex') -> float:
+    """SEI-normalized Maintainability Index in ``[0, 100]`` (higher is better)."""
+    if _is_regex(engine):
+        return _resolve(lang).maintainability_index(source)
+    from . import _tokenops
+    tokens = _engine_tokens(source, lang, engine)
+    return _tokenops.maintainability_index(tokens, _tokenops.stats(tokens, source).code_lines)
+
+
+def code_metrics(source: str, lang: LanguageLike, engine: str = 'regex') -> dict:
+    """Return a combined metrics dict (line stats + Halstead + complexity + MI)."""
+    if _is_regex(engine):
+        return _resolve(lang).code_metrics(source)
+    from . import _tokenops
+    tokens = _engine_tokens(source, lang, engine)
+    stats_obj = _tokenops.stats(tokens, source)
+    data = stats_obj.as_dict()
+    data['halstead'] = _tokenops.halstead(tokens).as_dict()
+    data['cyclomatic_complexity'] = _tokenops.cyclomatic(tokens)
+    data['max_nesting_depth'] = _tokenops.max_nesting_depth(tokens)
+    data['maintainability_index'] = _tokenops.maintainability_index(tokens, stats_obj.code_lines)
+    return data
+
+
 def normalize(source: str, lang: LanguageLike, engine: str = 'regex', **options) -> str:
     """Return a canonicalized form of ``source`` for ML / clone detection.
 
@@ -329,7 +369,7 @@ def preprocess(source: str, lang: LanguageLike, steps: Sequence[str] = ('comment
 
 __all__ = [
     '__version__',
-    'Token', 'TokenType', 'CodeStats', 'Normalizer',
+    'Token', 'TokenType', 'CodeStats', 'Halstead', 'Normalizer',
     'get_language', 'detect_language',
     'remove_comments', 'extract_comments', 'count_comments', 'match_comments',
     'remove_keywords', 'extract_keywords', 'count_keywords',
@@ -338,5 +378,6 @@ __all__ = [
     'remove_strings', 'extract_strings',
     'extract_identifiers', 'remove_whitespaces',
     'blank_comments', 'stats', 'normalize',
+    'halstead', 'cyclomatic_complexity', 'maintainability_index', 'code_metrics',
     'tokenize', 'preprocess',
 ]

@@ -87,6 +87,17 @@ s.comment_to_code_ratio, s.comment_density
 s.as_dict()   # includes per-token-type counts, ready for JSON / dataframes
 ```
 
+Complexity metrics (computed from the token stream):
+
+```python
+pr.halstead(source, lang="python").volume        # Halstead volume/difficulty/effort/bugs
+pr.cyclomatic_complexity(source, lang="python")  # approximate McCabe complexity
+pr.maintainability_index(source, lang="python")  # 0–100 (higher is better)
+pr.code_metrics(source, lang="python")           # everything above in one dict
+```
+
+On the CLI: `pyreprism stats --full file.py` (add `--json` for machine output).
+
 ### Normalization for ML / clone detection
 
 Canonicalize code so that only its structure remains — rename identifiers to

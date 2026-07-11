@@ -153,10 +153,13 @@ def _cmd_tokenize(args) -> int:
 
 
 def _cmd_stats(args) -> int:
+    from . import code_metrics
     multiple = _multiple(args.paths)
     for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename, text)
-        if args.engine in (None, 'regex'):
+        if args.full:
+            data = code_metrics(text, lang=cls, engine=args.engine)
+        elif args.engine in (None, 'regex'):
             data = cls.stats(text).as_dict()
         else:
             data = _tokenops.stats(get_engine(args.engine).tokenize(text, cls), text).as_dict()
@@ -165,10 +168,23 @@ def _cmd_stats(args) -> int:
         else:
             if multiple:
                 print(f"==> {label} <==")
-            width = max(len(k) for k in data)
-            for key, value in data.items():
+            flat = _flatten(data)
+            width = max(len(k) for k in flat)
+            for key, value in flat.items():
                 print(f"{key.ljust(width)}  {value}")
     return 0
+
+
+def _flatten(data: dict, prefix: str = '') -> dict:
+    """Flatten one level of nested dicts for text output (e.g. halstead.volume)."""
+    out = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            for sub, subval in value.items():
+                out[f"{prefix}{key}.{sub}"] = subval
+        else:
+            out[f"{prefix}{key}"] = value
+    return out
 
 
 def _cmd_normalize(args) -> int:
@@ -365,6 +381,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_stats = sub.add_parser('stats', help='report line/token metrics')
     add_common(p_stats)
     p_stats.add_argument('--json', action='store_true', help='emit JSON')
+    p_stats.add_argument('--full', action='store_true',
+                         help='include Halstead, cyclomatic complexity, nesting and '
+                              'maintainability index')
     p_stats.set_defaults(func=_cmd_stats)
 
     p_norm = sub.add_parser('normalize',

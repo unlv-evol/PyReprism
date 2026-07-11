@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Complexity metrics** computed from the token stream: `halstead()`
+  (volume/difficulty/effort/bugs), `cyclomatic_complexity()` (approximate McCabe),
+  `maintainability_index()` (0–100), `max_nesting_depth()`, and `code_metrics()`
+  which bundles them with the line/token stats. Exposed on the CLI via
+  `pyreprism stats --full`.
 - **Diff processing** (`PyReprism.diffs`): parse unified/`git` diffs and analyze
   the changed code per file in its own language. Includes churn metrics
   (`diff_stats`: added/removed split into code, comment and blank), cosmetic
