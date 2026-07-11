@@ -21,7 +21,7 @@ from .metrics import CodeStats, Halstead
 from .tokens import Token, TokenType
 from .utils.normalizer import Normalizer
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 LanguageLike = Union[str, "type"]
 
