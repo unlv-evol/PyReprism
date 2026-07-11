@@ -98,6 +98,45 @@ pr.code_metrics(source, lang="python")           # everything above in one dict
 
 On the CLI: `pyreprism stats --full file.py` (add `--json` for machine output).
 
+### Similarity & clone / plagiarism detection
+
+Winnowing k-gram fingerprints over the *normalized* token stream, so matches
+survive variable renaming and literal changes (Type-2 clones):
+
+```python
+from PyReprism import fingerprints as fp
+
+fp.similarity(code_a, code_b, "python")     # 0.0–1.0 (Jaccard of fingerprints)
+fp.containment(code_a, code_b, "python")    # how much of A appears in B
+
+index = fp.FingerprintIndex()               # many-to-many clone detection
+index.add_paths("submissions/")
+index.similar_pairs(threshold=0.7)          # -> [(file_a, file_b, score), ...]
+```
+
+On the CLI: `pyreprism similarity a.py b.py` and
+`pyreprism clones submissions/ --threshold 0.7`.
+
+### N-grams & code "naturalness"
+
+Token n-grams (over token text or, structurally, over token *types*) and an
+n-gram language model that measures how predictable/"natural" code is
+(Hindle et al.):
+
+```python
+from PyReprism import ngrams
+
+ngrams.ngram_counts(source, "python", n=3).most_common(10)
+ngrams.ngrams(source, "python", n=2, types=True)      # structural n-grams
+
+model = ngrams.train("corpus/", n=3)                  # train on a code corpus
+model.perplexity(ngrams.token_sequence(source, "python"))   # lower = more natural
+model.save("model.json")
+```
+
+On the CLI: `pyreprism ngrams file.py -n 3 --top 20` and
+`pyreprism perplexity --train corpus/ file.py`.
+
 ### Normalization for ML / clone detection
 
 Canonicalize code so that only its structure remains — rename identifiers to
