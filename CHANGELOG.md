@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Fingerprinting & similarity** (`PyReprism.fingerprints`): winnowing k-gram
+  fingerprints over the normalized token stream for clone/plagiarism detection —
+  `fingerprint()`, `similarity()`/`containment()` (rename-invariant by default),
+  and a `FingerprintIndex` for many-to-many detection over a corpus. CLI:
+  `pyreprism similarity a b` and `pyreprism clones DIR --threshold`.
+- **N-gram analysis & code naturalness** (`PyReprism.ngrams`): token/type n-gram
+  extraction and frequency counts, plus an `NgramModel` (add-k smoothing,
+  save/load) that measures cross-entropy / perplexity against a trained corpus
+  ("naturalness of software"). CLI: `pyreprism ngrams` and
+  `pyreprism perplexity --train`.
 - **Complexity metrics** computed from the token stream: `halstead()`
   (volume/difficulty/effort/bugs), `cyclomatic_complexity()` (approximate McCabe),
   `maintainability_index()` (0–100), `max_nesting_depth()`, and `code_metrics()`
