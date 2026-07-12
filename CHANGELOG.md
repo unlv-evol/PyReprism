@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-08
+
+This release adds a static code-analysis toolkit on top of the tokenizer:
+diff/PR analysis, complexity metrics, n-gram "naturalness", and clone/plagiarism
+similarity — plus a comprehensive per-language test suite that hardened comment
+handling across the board.
+
 ### Added
+- **Fingerprinting & similarity** (`PyReprism.fingerprints`): winnowing k-gram
+  fingerprints over the normalized token stream for clone/plagiarism detection —
+  `fingerprint()`, `similarity()`/`containment()` (rename-invariant by default),
+  and a `FingerprintIndex` for many-to-many detection over a corpus. CLI:
+  `pyreprism similarity a b` and `pyreprism clones DIR --threshold`.
+- **N-gram analysis & code naturalness** (`PyReprism.ngrams`): token/type n-gram
+  extraction and frequency counts, plus an `NgramModel` (add-k smoothing,
+  save/load) that measures cross-entropy / perplexity against a trained corpus
+  ("naturalness of software"). CLI: `pyreprism ngrams` and
+  `pyreprism perplexity --train`.
+- **Complexity metrics** computed from the token stream: `halstead()`
+  (volume/difficulty/effort/bugs), `cyclomatic_complexity()` (approximate McCabe),
+  `maintainability_index()` (0–100), `max_nesting_depth()`, and `code_metrics()`
+  which bundles them with the line/token stats. Exposed on the CLI via
+  `pyreprism stats --full`.
 - **Diff processing** (`PyReprism.diffs`): parse unified/`git` diffs and analyze
   the changed code per file in its own language. Includes churn metrics
   (`diff_stats`: added/removed split into code, comment and blank), cosmetic
@@ -16,6 +38,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Fragment mode works from the diff alone; setting a file's `new_source` /
   `old_source` enables accurate full-file classification. New CLI command
   `pyreprism diff` (`--json` / `--csv` / `--per-file` / `--cosmetic`).
+
+### Changed
+- Adopted the standard `src/` layout with tests at the top level, consolidated
+  all dependencies into `pyproject.toml` extras, and rewrote the landing page.
+- Single-sourced the version from the package and automated releases: pushing a
+  `vX.Y.Z` tag now publishes to PyPI (Trusted Publishing) and creates a GitHub
+  Release. Added Python 3.13 to the CI matrix.
+- Added a comprehensive, data-driven per-language comment test suite that
+  requires every registered language to be covered.
+
+### Fixed
+- Fixed comment stripping in 8 more languages surfaced by the new test suite:
+  `smalltalk` (kept the comment and deleted the code) and
+  `eiffel`/`bro`/`coffeescript`/`io`/`nix`/`gherkin`/`gedcom` (trailing comments
+  not removed and newlines dropped).
+- Fixed a CLI argument-ordering incompatibility on Python ≤ 3.11 (options must
+  follow positionals).
 
 ## [0.1.0] - 2026-07-07
 
@@ -73,6 +112,7 @@ ML-oriented normalization, an optional accurate backend, and batch processing.
 - Early beta releases: comment removal for an initial set of languages and the
   `Normalizer` whitespace helper.
 
-[Unreleased]: https://github.com/unlv-evol/PyReprism/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/unlv-evol/PyReprism/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/unlv-evol/PyReprism/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/unlv-evol/PyReprism/releases/tag/v0.1.0
 [0.0.4]: https://github.com/unlv-evol/PyReprism/releases/tag/v0.0.4

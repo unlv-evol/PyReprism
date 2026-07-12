@@ -23,7 +23,7 @@ class Gherkin(BaseLanguage):
 
 	@classmethod
 	def comment_regex(cls):
-		return re.compile(r'(?P<comment>^#.*?$)|(?P<noncomment>^[^#\n].*?$)', re.MULTILINE)
+		return re.compile(r'(?P<comment>^\s*#.*?$)|(?P<noncomment>.[^\n]*|\n)', re.MULTILINE)
 
 	@classmethod
 	def remove_comments(cls, source_code: str, isList: bool = False):

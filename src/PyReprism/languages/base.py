@@ -306,6 +306,44 @@ class BaseLanguage:
         from .. import _tokenops
         return _tokenops.stats(cls.tokenize(source), source)
 
+    @classmethod
+    def halstead(cls, source: str):
+        """Return the :class:`~PyReprism.metrics.Halstead` measures for ``source``."""
+        from .. import _tokenops
+        return _tokenops.halstead(cls.tokenize(source))
+
+    @classmethod
+    def cyclomatic_complexity(cls, source: str) -> int:
+        """Approximate McCabe cyclomatic complexity (token-based)."""
+        from .. import _tokenops
+        return _tokenops.cyclomatic(cls.tokenize(source))
+
+    @classmethod
+    def max_nesting_depth(cls, source: str) -> int:
+        """Maximum bracket nesting depth."""
+        from .. import _tokenops
+        return _tokenops.max_nesting_depth(cls.tokenize(source))
+
+    @classmethod
+    def maintainability_index(cls, source: str) -> float:
+        """SEI-normalized Maintainability Index in ``[0, 100]`` (higher is better)."""
+        from .. import _tokenops
+        tokens = cls.tokenize(source)
+        return _tokenops.maintainability_index(tokens, _tokenops.stats(tokens, source).code_lines)
+
+    @classmethod
+    def code_metrics(cls, source: str) -> dict:
+        """Return a combined metrics dict (line stats + Halstead + complexity + MI)."""
+        from .. import _tokenops
+        tokens = cls.tokenize(source)
+        stats = _tokenops.stats(tokens, source)
+        data = stats.as_dict()
+        data['halstead'] = _tokenops.halstead(tokens).as_dict()
+        data['cyclomatic_complexity'] = _tokenops.cyclomatic(tokens)
+        data['max_nesting_depth'] = _tokenops.max_nesting_depth(tokens)
+        data['maintainability_index'] = _tokenops.maintainability_index(tokens, stats.code_lines)
+        return data
+
     # ------------------------------------------------------------------ normalize
     @classmethod
     def normalize(cls, source: str, **options) -> str:

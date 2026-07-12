@@ -1,11 +1,12 @@
-"""Tests for stats(), normalize() and blank_comments()."""
+"""Tests for stats(), normalize(), blank_comments() and complexity metrics."""
 import json
 
 import pytest
 
 import PyReprism as pr
 from PyReprism.languages import _load_all_languages
-from PyReprism.metrics import CodeStats
+from PyReprism.languages.registry import LanguageRegistry
+from PyReprism.metrics import CodeStats, Halstead
 from PyReprism.cli import main
 
 _load_all_languages()
@@ -125,3 +126,78 @@ def test_cli_normalize_keep_flags(monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('total = 42\n'))
     assert main(['normalize', '--lang', 'python', '--keep-names', '--keep-numbers']) == 0
     assert capsys.readouterr().out.strip() == 'total = 42'
+
+
+# ------------------------------------------------------------------- halstead
+def test_halstead_counts_and_derived():
+    h = pr.halstead('x = a + b * a', lang='python')
+    assert isinstance(h, Halstead)
+    assert h.total_operators >= 1 and h.total_operands >= 1
+    # 'a' appears twice -> counted once as a distinct operand
+    assert h.distinct_operands < h.total_operands
+    assert h.volume > 0 and h.difficulty > 0
+    assert set(h.as_dict()) >= {'volume', 'difficulty', 'effort', 'bugs', 'vocabulary'}
+
+
+def test_halstead_empty_source_is_zero():
+    h = pr.halstead('', lang='python')
+    assert h.volume == 0.0 and h.difficulty == 0.0
+
+
+# ---------------------------------------------------------------- cyclomatic
+def test_cyclomatic_straightline_is_one():
+    assert pr.cyclomatic_complexity('x = 1\ny = 2\n', lang='python') == 1
+
+
+def test_cyclomatic_counts_branches_and_boolean_ops():
+    # base 1 + if + and + elif + for = 5
+    src = 'def f(n):\n    if n > 0 and n < 9:\n        return 1\n    elif n:\n        for i in n:\n            pass\n'
+    assert pr.cyclomatic_complexity(src, lang='python') == 5
+
+
+def test_cyclomatic_counts_c_style_operators():
+    # base 1 + if + && + ternary ?
+    assert pr.cyclomatic_complexity('if (a && b) return x ? y : z;', lang='c') == 4
+
+
+# ---------------------------------------------------------------- nesting / MI
+def test_max_nesting_depth():
+    py = LanguageRegistry.get('Python')
+    assert py.max_nesting_depth('f(g(h(x)))') == 3
+    assert py.max_nesting_depth('a + b') == 0
+
+
+def test_maintainability_index_range_and_ordering():
+    simple = pr.maintainability_index('x = 1\n', lang='python')
+    complex_src = ('def f(a, b, c, d):\n' + '    if a and b or c and d:\n'
+                   '        return a * b + c - d / a\n' * 3)
+    hard = pr.maintainability_index(complex_src, lang='python')
+    assert 0 <= hard <= simple <= 100
+
+
+def test_code_metrics_bundles_everything():
+    m = pr.code_metrics('def f():\n    return 1  # c\n', lang='python')
+    assert 'code_lines' in m and 'halstead' in m
+    assert 'cyclomatic_complexity' in m and 'maintainability_index' in m
+    assert 'max_nesting_depth' in m
+
+
+# ------------------------------------------------------- works for every language
+def test_complexity_metrics_run_for_all_languages():
+    sample = 'a = 1\nif a and b:\n    f(g(x))\n'
+    for name, cls in LanguageRegistry.all().items():
+        assert cls.cyclomatic_complexity(sample) >= 1
+        assert cls.max_nesting_depth(sample) >= 0
+        assert 0 <= cls.maintainability_index(sample) <= 100
+        assert cls.halstead(sample).length >= 0
+
+
+# --------------------------------------------------------------------------- CLI
+def test_cli_stats_full(monkeypatch, capsys):
+    import io
+    monkeypatch.setattr('sys.stdin', io.StringIO('if (a && b) { return 1; }\n'))
+    assert main(['stats', '--lang', 'c', '--full', '--json']) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data['cyclomatic_complexity'] >= 2
+    assert 'volume' in data['halstead']
+    assert 'maintainability_index' in data

@@ -20,7 +20,13 @@ class SmallTalk(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r'(?P<comment>".*?"|".*?$|^.*?")|(?P<noncomment>[^\"]*)', re.DOTALL | re.MULTILINE)
+        # In Smalltalk, double quotes delimit comments and single quotes delimit
+        # strings. Keep strings (and other code) in the noncomment group.
+        return re.compile(
+            r'(?P<comment>"(?:[^"]|"")*")|'
+            r"(?P<noncomment>'(?:[^']|'')*'|.[^\"']*)",
+            re.DOTALL | re.MULTILINE,
+        )
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

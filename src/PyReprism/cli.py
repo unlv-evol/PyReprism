@@ -153,10 +153,13 @@ def _cmd_tokenize(args) -> int:
 
 
 def _cmd_stats(args) -> int:
+    from . import code_metrics
     multiple = _multiple(args.paths)
     for label, text, filename, base in _iter_inputs(args.paths):
         cls = _resolve(args.lang, filename, text)
-        if args.engine in (None, 'regex'):
+        if args.full:
+            data = code_metrics(text, lang=cls, engine=args.engine)
+        elif args.engine in (None, 'regex'):
             data = cls.stats(text).as_dict()
         else:
             data = _tokenops.stats(get_engine(args.engine).tokenize(text, cls), text).as_dict()
@@ -165,10 +168,23 @@ def _cmd_stats(args) -> int:
         else:
             if multiple:
                 print(f"==> {label} <==")
-            width = max(len(k) for k in data)
-            for key, value in data.items():
+            flat = _flatten(data)
+            width = max(len(k) for k in flat)
+            for key, value in flat.items():
                 print(f"{key.ljust(width)}  {value}")
     return 0
+
+
+def _flatten(data: dict, prefix: str = '') -> dict:
+    """Flatten one level of nested dicts for text output (e.g. halstead.volume)."""
+    out = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            for sub, subval in value.items():
+                out[f"{prefix}{key}.{sub}"] = subval
+        else:
+            out[f"{prefix}{key}"] = value
+    return out
 
 
 def _cmd_normalize(args) -> int:
@@ -261,6 +277,58 @@ def _cmd_diff(args) -> int:
           f"+{totals['added_code']}/-{totals['removed_code']} code, "
           f"+{totals['added_comment']}/-{totals['removed_comment']} comment, "
           f"+{totals['added_blank']}/-{totals['removed_blank']} blank")
+    return 0
+
+
+def _cmd_ngrams(args) -> int:
+    from .ngrams import ngram_counts
+    multiple = _multiple(args.paths)
+    for label, text, filename, base in _iter_inputs(args.paths):
+        cls = _resolve(args.lang, filename, text)
+        counts = ngram_counts(text, cls, n=args.n, types=args.types)
+        if multiple:
+            print(f"==> {label} <==")
+        if args.json:
+            print(json.dumps([[list(g), c] for g, c in counts.most_common(args.top)]))
+        else:
+            for gram, count in counts.most_common(args.top):
+                print(f"{count}\t{' '.join(gram)}")
+    return 0
+
+
+def _cmd_perplexity(args) -> int:
+    from .ngrams import token_sequence, train
+    model = train(args.train, n=args.n, types=args.types)
+    for label, text, filename, base in _iter_inputs(args.paths):
+        cls = _resolve(args.lang, filename, text)
+        seq = token_sequence(text, cls, types=args.types)
+        print(f"{model.perplexity(seq):.4f}\t{label}")
+    return 0
+
+
+def _cmd_similarity(args) -> int:
+    from .fingerprints import similarity
+    with open(args.a, 'r', encoding='utf-8', errors='replace') as handle:
+        text_a = handle.read()
+    with open(args.b, 'r', encoding='utf-8', errors='replace') as handle:
+        text_b = handle.read()
+    lang = _resolve(args.lang, args.a, text_a)
+    score = similarity(text_a, text_b, lang, k=args.k, w=args.w,
+                       normalize=not args.no_normalize, types=args.types)
+    print(f"{score:.4f}")
+    return 0
+
+
+def _cmd_clones(args) -> int:
+    from .fingerprints import FingerprintIndex
+    index = FingerprintIndex(k=args.k, w=args.w, normalize=not args.no_normalize,
+                             types=args.types)
+    index.add_paths(args.paths)
+    pairs = index.similar_pairs(args.threshold)
+    for first, second, score in pairs:
+        print(f"{score:.4f}\t{first}\t{second}")
+    if not pairs:
+        print(f"no file pairs at or above similarity {args.threshold}", file=sys.stderr)
     return 0
 
 
@@ -365,6 +433,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_stats = sub.add_parser('stats', help='report line/token metrics')
     add_common(p_stats)
     p_stats.add_argument('--json', action='store_true', help='emit JSON')
+    p_stats.add_argument('--full', action='store_true',
+                         help='include Halstead, cyclomatic complexity, nesting and '
+                              'maintainability index')
     p_stats.set_defaults(func=_cmd_stats)
 
     p_norm = sub.add_parser('normalize',
@@ -406,6 +477,49 @@ def build_parser() -> argparse.ArgumentParser:
     p_diff.add_argument('--cosmetic', action='store_true',
                         help='list only files whose change is comment/whitespace-only')
     p_diff.set_defaults(func=_cmd_diff)
+
+    p_ngrams = sub.add_parser('ngrams', help='list the most common token n-grams')
+    add_common(p_ngrams)
+    p_ngrams.add_argument('-n', type=int, default=3, help='n-gram size (default: 3)')
+    p_ngrams.add_argument('--top', type=int, default=20, help='show the top K (default: 20)')
+    p_ngrams.add_argument('--types', action='store_true',
+                          help='n-grams over token types (structural), not text')
+    p_ngrams.add_argument('--json', action='store_true', help='emit JSON')
+    p_ngrams.set_defaults(func=_cmd_ngrams)
+
+    p_pp = sub.add_parser('perplexity',
+                          help='score code "naturalness" against a trained corpus')
+    p_pp.add_argument('--train', required=True, metavar='PATH',
+                      help='corpus directory/files to train the n-gram model on')
+    add_common(p_pp)
+    p_pp.add_argument('-n', type=int, default=3, help='n-gram size (default: 3)')
+    p_pp.add_argument('--types', action='store_true',
+                      help='model token types (structural) instead of text')
+    p_pp.set_defaults(func=_cmd_perplexity)
+
+    def add_fingerprint_opts(p):
+        p.add_argument('-k', type=int, default=5, help='k-gram size (default: 5)')
+        p.add_argument('-w', type=int, default=4, help='winnowing window (default: 4)')
+        p.add_argument('--no-normalize', action='store_true',
+                       help='fingerprint raw tokens (not rename-invariant)')
+        p.add_argument('--types', action='store_true',
+                       help='fingerprint token types only (fully structural)')
+
+    p_sim = sub.add_parser('similarity',
+                           help='fingerprint similarity (0-1) between two files')
+    p_sim.add_argument('a')
+    p_sim.add_argument('b')
+    p_sim.add_argument('-l', '--lang', help='language (auto-detected from the first file)')
+    add_fingerprint_opts(p_sim)
+    p_sim.set_defaults(func=_cmd_similarity)
+
+    p_clones = sub.add_parser('clones',
+                              help='find similar/duplicate files in a tree (clone/plagiarism)')
+    p_clones.add_argument('paths', nargs='+', help='directories or files')
+    p_clones.add_argument('--threshold', type=float, default=0.6,
+                          help='minimum similarity to report (default: 0.6)')
+    add_fingerprint_opts(p_clones)
+    p_clones.set_defaults(func=_cmd_clones)
 
     p_langs = sub.add_parser('languages', help='list supported languages and extensions')
     p_langs.set_defaults(func=_cmd_languages)

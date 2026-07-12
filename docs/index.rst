@@ -11,6 +11,8 @@ PyReprism documentation!
    cli
    tokens
    metrics
+   ngrams
+   fingerprints
    engines
    batch
    diffs
