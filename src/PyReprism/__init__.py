@@ -60,6 +60,14 @@ def get_language(lang: LanguageLike) -> Type:
                or LanguageRegistry.get(name.upper()))
         if cls:
             return cls
+        # Long-tail fallback: no built-in module matched, so try a Pygments-backed
+        # language (500+ lexers). Only a language name or an extension is eligible,
+        # and only when Pygments is installed; otherwise fall through to the error.
+        from .languages.dynamic import pygments_language_for
+        spec = name if (name.startswith('.') or '.' not in name) else os.path.splitext(name)[1]
+        cls = pygments_language_for(spec)
+        if cls:
+            return cls
     raise ValueError(f"Unknown language: {lang!r}")
 
 
