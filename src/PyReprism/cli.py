@@ -9,6 +9,7 @@ Usage examples::
     pyreprism preprocess --steps comments,strings,whitespace file.java
     pyreprism tokenize --json file.py
     pyreprism languages
+    pyreprism languages --pygments
 """
 import argparse
 import glob
@@ -332,22 +333,71 @@ def _cmd_clones(args) -> int:
     return 0
 
 
+# Pygments lexers that are generic fallbacks, not real languages.
+_PYGMENTS_SKIP = {'text', 'raw', 'output', 'pseudo', ' specials'}
+
+
+def _pygments_fallback_rows(builtin_exts):
+    """Rows ``(alias, ext)`` for Pygments lexers not covered by a built-in module.
+
+    Returns ``None`` when Pygments is not installed. Deduped by primary extension
+    so the count reflects genuinely *additional* coverage.
+    """
+    try:
+        from pygments.lexers import get_all_lexers
+    except ImportError:
+        return None
+    rows, seen_ext = [], set()
+    for name, aliases, filenames, _mime in get_all_lexers():
+        alias = aliases[0] if aliases else name
+        if alias.lower() in _PYGMENTS_SKIP or name == 'Text only':
+            continue
+        ext = next((f[1:] for f in filenames if f.startswith('*.')), '')
+        if not ext or ext in builtin_exts or ext in seen_ext:
+            continue
+        seen_ext.add(ext)
+        rows.append((alias, ext))
+    return sorted(rows)
+
+
 def _cmd_languages(args) -> int:
     from .languages import _load_all_languages
     from .languages.registry import LanguageRegistry
 
     _load_all_languages()
     rows = []
+    builtin_exts = set()
     for name, cls in sorted(LanguageRegistry.all().items()):
         try:
             ext = cls.file_extension()
         except Exception:
             ext = '?'
         rows.append((name, ext))
+        builtin_exts.add(ext)
+
+    if getattr(args, 'pygments', False):
+        extra = _pygments_fallback_rows(builtin_exts)
+        if extra is None:
+            print("Pygments is not installed; install it with "
+                  "`pip install pyreprism[accurate]` to enable the fallback tier.",
+                  file=sys.stderr)
+            return 1
+        width = max((len(n) for n, _ in extra), default=0)
+        for name, ext in extra:
+            print(f"{name.ljust(width)}  {ext}")
+        print(f"\n{len(extra)} additional languages via the Pygments fallback "
+              f"(resolved on demand, not validated)", file=sys.stderr)
+        return 0
+
     width = max((len(n) for n, _ in rows), default=0)
     for name, ext in rows:
         print(f"{name.ljust(width)}  {ext}")
-    print(f"\n{len(rows)} languages", file=sys.stderr)
+    footer = f"\n{len(rows)} built-in languages (zero-dependency)"
+    extra = _pygments_fallback_rows(builtin_exts)
+    if extra:
+        footer += (f"; +{len(extra)} more available via the optional Pygments "
+                   f"backend (see `pyreprism languages --pygments`)")
+    print(footer, file=sys.stderr)
     return 0
 
 
@@ -378,7 +428,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='pyreprism',
         description='Preprocess source code: strip/extract/count comments, strings, '
-                    'numbers, operators, keywords and identifiers across 145+ languages.',
+                    'numbers, operators, keywords and identifiers across 160+ '
+                    'built-in languages (500+ with the optional Pygments backend).',
     )
     parser.add_argument('--version', action='version', version=f'pyreprism {__version__}')
     sub = parser.add_subparsers(dest='command', required=True)
@@ -522,6 +573,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_clones.set_defaults(func=_cmd_clones)
 
     p_langs = sub.add_parser('languages', help='list supported languages and extensions')
+    p_langs.add_argument('--pygments', action='store_true',
+                         help='instead list the additional languages available via '
+                              'the optional Pygments fallback backend')
     p_langs.set_defaults(func=_cmd_languages)
 
     return parser
