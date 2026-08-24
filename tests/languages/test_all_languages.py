@@ -162,10 +162,54 @@ SAMPLES = {
     'Xeora': 'keepAA //zzsecretzz\nkeepBB\n',
     'Xojo': 'keepAA //zzsecretzz\nkeepBB\n',
     'Yaml': 'keepAA #zzsecretzz\nkeepBB\n',
+    # --- generated (data-driven) languages: see languages/generated.py ---
+    'Vala': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Solidity': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Wgsl': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Move': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Sway': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Pony': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Thrift': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Zig': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Gleam': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Toml': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Capnp': 'keepAA #zzsecretzz\nkeepBB\n',
+    'CMake': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Fish': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Awk': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Janet': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Hcl': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Elm': 'keepAA --zzsecretzz\nkeepBB\n',
+    'PureScript': 'keepAA --zzsecretzz\nkeepBB\n',
+    'Racket': 'keepAA ;zzsecretzz\nkeepBB\n',
+    'Fennel': 'keepAA ;zzsecretzz\nkeepBB\n',
+    'Red': 'keepAA ;zzsecretzz\nkeepBB\n',
+    # --- second batch: more families + dedicated scanners ---
+    'Cadence': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Chapel': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Tact': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Carbon': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Hare': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Cue': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Ballerina': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Jsonnet': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Odin': 'keepAA //zzsecretzz\nkeepBB\n',
+    'V': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Jai': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Vyper': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Starlark': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Nushell': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Nickel': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Just': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Dhall': 'keepAA --zzsecretzz\nkeepBB\n',
+    'Idris': 'keepAA --zzsecretzz\nkeepBB\n',
+    'Futhark': 'keepAA --zzsecretzz\nkeepBB\n',
+    'Lean': 'keepAA --zzsecretzz\nkeepBB\n',
 }
 
 # Languages whose comment model doesn't fit the shared sample; tested separately.
-SPECIAL = {'CSP', 'BrainFuck'}
+# COBOL is column-sensitive (see test_generated_languages.py).
+SPECIAL = {'CSP', 'BrainFuck', 'Cobol'}
 
 
 @pytest.mark.parametrize('name', sorted(SAMPLES))

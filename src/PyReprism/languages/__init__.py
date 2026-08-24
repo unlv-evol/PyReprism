@@ -71,6 +71,9 @@ _PREFERRED_LANGUAGE = {
     '.sql': 'SQL',
     '.vb': 'Vbnet',
     '.js': 'JavaScript',
+    # '.v' is shared by Verilog and V (vlang); Verilog is far more common in
+    # existing corpora, so it wins extension lookup. Resolve V by name (`v`).
+    '.v': 'Verilog',
 }
 
 

@@ -87,6 +87,23 @@ def test_languages_lists_many(monkeypatch, capsys):
     assert code == 0
     assert 'Python' in out
     assert out.count('\n') > 100
+    # generated (data-driven) languages are registered and therefore listed
+    assert 'Zig' in out and 'Solidity' in out and 'Toml' in out
+    assert 'built-in languages' in err
+
+
+def test_languages_pygments_flag(monkeypatch, capsys):
+    import importlib.util
+    code, out, err = run(['languages', '--pygments'], monkeypatch=monkeypatch,
+                         capsys=capsys)
+    if importlib.util.find_spec('pygments') is None:
+        assert code == 1
+        assert 'Pygments is not installed' in err
+    else:
+        assert code == 0
+        assert 'Pygments fallback' in err
+        # a Pygments-only language (no built-in module) should appear
+        assert 'sml' in out.lower()
 
 
 def test_no_language_errors(monkeypatch, capsys):
