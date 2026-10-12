@@ -71,7 +71,17 @@ class PygmentsEngine(Engine):
     def _map(ttype, value: str) -> TokenType:
         from pygments.token import (Comment, Keyword, Name, Number, Operator,
                                     String, Whitespace)
+        # Pygments files preprocessor directives under Comment.Preproc
+        # (``#include``) and their header names under Comment.PreprocFile;
+        # they are code, not comments.
+        if ttype in Comment.PreprocFile:
+            return TokenType.STRING
+        if ttype in Comment.Preproc:
+            return TokenType.OTHER
         if ttype in Comment:
+            return TokenType.COMMENT
+        # Docstrings are comments, as in the regex engine (one policy for both).
+        if ttype in String.Doc:
             return TokenType.COMMENT
         if ttype in String:
             return TokenType.STRING
@@ -83,26 +93,32 @@ class PygmentsEngine(Engine):
             return TokenType.IDENTIFIER
         if ttype in Operator:
             return TokenType.OPERATOR
-        if ttype in Whitespace or value.isspace():
+        if ttype in Whitespace or not value.replace('\ufeff', '').strip():
             return TokenType.WHITESPACE
         return TokenType.OTHER
 
     def tokenize(self, source: str, language_cls) -> List[Token]:
         lexer = self._lexer(language_cls)
-        tokens = []
         # get_tokens_unprocessed is lossless and yields absolute offsets.
         # Pygments splits e.g. a string literal into quote/content/quote tokens;
         # coalesce consecutive tokens of the same kind so a whole comment or
         # string surfaces as one token (matching the regex engine's granularity).
+        # Spans are merged first and sliced from the source once, and lines are
+        # counted incrementally, so long files stay linear.
+        spans = []  # [kind, start, end]
         for index, ttype, value in lexer.get_tokens_unprocessed(source):
             if value == '':
                 continue
             kind = self._map(ttype, value)
-            if tokens and tokens[-1].type is kind and tokens[-1].end == index:
-                prev = tokens[-1]
-                tokens[-1] = Token(kind, prev.value + value, prev.start,
-                                   index + len(value), prev.line)
+            end = index + len(value)
+            if spans and spans[-1][0] is kind and spans[-1][2] == index:
+                spans[-1][2] = end
             else:
-                line = source.count('\n', 0, index) + 1
-                tokens.append(Token(kind, value, index, index + len(value), line))
+                spans.append([kind, index, end])
+        tokens = []
+        line, pos = 1, 0
+        for kind, start, end in spans:
+            line += source.count('\n', pos, start)
+            pos = start
+            tokens.append(Token(kind, source[start:end], start, end, line))
         return tokens

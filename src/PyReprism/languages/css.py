@@ -23,6 +23,7 @@ class CSS(BaseLanguage):
     def comment_regex(cls) -> re.Pattern:
         """:rtype: re.Pattern"""
         return re.compile(
-            r'(?P<comment>/\*[\s\S]*?\*/)|(?P<noncomment>.[^/]*)',
+            r'(?P<comment>/\*[\s\S]*?\*/)'
+            r'|(?P<noncomment>"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|.[^/"\']*)',
             re.DOTALL | re.MULTILINE,
         )

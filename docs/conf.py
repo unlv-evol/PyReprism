@@ -18,8 +18,13 @@ sys.path.insert(0, os.path.abspath('../src'))
 # -- Project information -----------------------------------------------------
 
 project = "PyReprism"
-copyright = "2024, UNLV EVOL LAB"
+copyright = "2024-2026, UNLV EVOL LAB"
 author = "UNLV EVOL LAB"
+
+from PyReprism import __version__  # noqa: E402
+
+release = __version__
+version = ".".join(__version__.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------

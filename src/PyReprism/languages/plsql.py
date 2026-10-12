@@ -27,12 +27,10 @@ class PLSQL(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # Strings and quoted identifiers are kept whole.
         return re.compile(
-            r'(?P<comment>--.*?$|/\*.*?\*/)|'
-            r'(?P<noncomment>\'(\\.|\'\'|[^\'])*\'|.[^-/\']*)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>--.*?$|/\*.*?\*/)|(?P<noncomment>'(\\.|''|[^'])*'|\"[^\"]*\"|.[^-/'\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def keywords_regex(cls) -> re.Pattern:

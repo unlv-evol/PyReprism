@@ -29,6 +29,6 @@ class NSIS(BaseLanguage):
         """:rtype: re.Pattern"""
         return re.compile(
             r'(?P<comment>[;#].*?$|/\*.*?\*/)|'
-            r'(?P<noncomment>"(\\.|[^\\"])*"|.[^;#/"]*)',
+            r'(?P<noncomment>"(\\.|[^\\"])*"|\'(\\.|[^\\\'])*\'|`(\\.|[^\\`])*`|.[^;#/"\'`]*)',
             re.DOTALL | re.MULTILINE,
         )

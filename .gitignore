@@ -169,3 +169,4 @@ __test__.py
 .DS_Store
 # Claude Code agent workspace
 .claude/
+manuscript/replication/

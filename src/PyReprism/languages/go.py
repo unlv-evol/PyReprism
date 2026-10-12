@@ -17,7 +17,13 @@ class Go(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^/\\'\"]*)", re.DOTALL | re.MULTILINE)
+        # Raw strings (`...`) may span lines and contain // or /*.
+        return re.compile(r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>`[^`]*`|'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^/\\'\"`]*)", re.DOTALL | re.MULTILINE)
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Interpreted strings, runes, and raw strings (`...`)."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`[^`]*`')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

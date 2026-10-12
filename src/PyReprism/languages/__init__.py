@@ -42,12 +42,19 @@ def __getattr__(name: str) -> Any:
     raise AttributeError(f"module {__name__} has no attribute {name}")
 
 
+_ALL_LOADED = False
+
+
 def _load_all_languages() -> None:
     """Import every language submodule so the registry is fully populated.
 
     Language modules register themselves on import; without importing them the
-    registry only knows about classes that have already been accessed.
+    registry only knows about classes that have already been accessed. The
+    package is scanned once per process.
     """
+    global _ALL_LOADED
+    if _ALL_LOADED:
+        return
     package_dir = os.path.dirname(__file__)
     for module in pkgutil.iter_modules([package_dir]):
         name = module.name
@@ -58,6 +65,7 @@ def _load_all_languages() -> None:
         except Exception:
             # A broken/optional language module should not break lookups.
             continue
+    _ALL_LOADED = True
 
 
 # For extensions shared by several languages, prefer the canonical/primary one.
@@ -77,28 +85,62 @@ _PREFERRED_LANGUAGE = {
 }
 
 
+# Secondary extensions of languages whose module declares another one. Only
+# extensions with the same lexical syntax are listed.
+_EXTRA_EXTENSIONS = {
+    '.h': 'C',
+    '.cc': 'CPP', '.cxx': 'CPP', '.c++': 'CPP', '.hpp': 'CPP', '.hh': 'CPP',
+    '.hxx': 'CPP', '.h++': 'CPP',
+    '.mjs': 'JavaScript', '.cjs': 'JavaScript',
+    '.mts': 'TypeScript', '.cts': 'TypeScript',
+    '.pyi': 'Python', '.pyw': 'Python',
+    '.bash': 'Bash', '.ksh': 'Bash', '.zsh': 'Bash',
+    '.yml': 'Yaml', '.markdown': 'MarkDown', '.htm': 'HTML',
+    '.kts': 'Kotlin', '.rake': 'Ruby', '.gemspec': 'Ruby', '.exs': 'Elixir',
+    '.mli': 'Ocaml', '.fsx': 'FSharp', '.fsi': 'FSharp',
+    '.cljs': 'Clojure', '.cljc': 'Clojure', '.psm1': 'PowerShell',
+    '.psd1': 'PowerShell', '.pm': 'Perl', '.mm': 'ObjectiveC',
+    '.gradle': 'Groovy', '.mk': 'MakeFile', '.sc': 'Scala',
+}
+
+_EXT_INDEX: dict = {}
+_EXT_INDEX_SIZE = -1
+
+
+def _extension_index() -> dict:
+    """``{extension: class}``, rebuilt only when the registry grows."""
+    global _EXT_INDEX, _EXT_INDEX_SIZE
+    _load_all_languages()
+    registry = LanguageRegistry.all()
+    if len(registry) == _EXT_INDEX_SIZE:
+        return _EXT_INDEX
+    index: dict = {}
+    for cls in registry.values():  # first registered match wins
+        try:
+            index.setdefault(cls.file_extension(), cls)
+        except Exception:
+            continue
+    for ext, name in _PREFERRED_LANGUAGE.items():
+        cls = registry.get(name)
+        try:
+            if cls is not None and cls.file_extension() == ext:
+                index[ext] = cls
+        except Exception:
+            pass
+    for ext, name in _EXTRA_EXTENSIONS.items():
+        if ext not in index and registry.get(name) is not None:
+            index[ext] = registry[name]
+    _EXT_INDEX, _EXT_INDEX_SIZE = index, len(registry)
+    return index
+
+
 def get_language_by_extension(ext: str) -> Optional[Type[BaseLanguage]]:
     """Return a registered language class whose ``file_extension()`` matches ``ext``.
 
     All language modules are imported on first call so cold lookups succeed. Some
     extensions are shared by several languages (``.py`` -> Python/Django, ``.m`` ->
     MatLab/ObjectiveC); a small preference table picks the canonical language for the
-    common cases, otherwise the first registered match is returned.
+    common cases, otherwise the first registered match is returned. Common
+    secondary extensions (``.h``, ``.hpp``, ``.yml``, ...) map to their language.
     """
-    _load_all_languages()
-    registry = LanguageRegistry.all()
-    preferred = _PREFERRED_LANGUAGE.get(ext)
-    if preferred:
-        cls = registry.get(preferred)
-        try:
-            if cls is not None and cls.file_extension() == ext:
-                return cls
-        except Exception:
-            pass
-    for cls in registry.values():
-        try:
-            if cls.file_extension() == ext:
-                return cls
-        except Exception:
-            continue
-    return None
+    return _extension_index().get(ext)

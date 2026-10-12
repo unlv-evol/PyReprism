@@ -26,9 +26,11 @@ class Glsl(BaseLanguage):
 		).split('|')
 
 	@classmethod
-	def comment_regex(cls):
-		# Match // single-line and /* ... */ block comments; capture non-comment otherwise
-		return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>.[^/]*)', re.DOTALL | re.MULTILINE)
+	def comment_regex(cls) -> re.Pattern:
+		# Strings (e.g. #include paths) are kept whole.
+		return re.compile(
+			r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|.[^/\"]*)",
+			re.DOTALL | re.MULTILINE)
 
 	@classmethod
 	def remove_comments(cls, source_code: str, isList: bool = False):

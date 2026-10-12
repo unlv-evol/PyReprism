@@ -16,8 +16,11 @@ class Autoit(BaseLanguage):
         return keyword
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>;.*?$|#(?:cs|comments-start)[\s\S]*?#(?:ce|comments-end))|(?P<noncomment>.[^;#]*)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings double their quotes.
+        return re.compile(
+            r"(?P<comment>;.*?$|#(?:cs|comments-start)[\s\S]*?#(?:ce|comments-end))|(?P<noncomment>\"(?:\"\"|[^\"\n])*\"|'(?:''|[^'\n])*'|.[^;#\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):
@@ -30,16 +33,6 @@ class Autoit(BaseLanguage):
     @classmethod
     def keywords_regex(cls):
         return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str):

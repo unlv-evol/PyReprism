@@ -38,7 +38,28 @@ class Python(BaseLanguage):
         :return: A compiled regex pattern with named groups to match single-line comments, multiline comments, and non-comment code elements.
         :rtype: re.Pattern
         """
-        return re.compile(r"(?P<comment>#.*?$)|(?P<multilinecomment1>\"\"\".*?\"\"\")|(?P<multilinecomment2>'''.*?''')|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^#'\"]*)", re.DOTALL | re.MULTILINE)
+        # A triple-quoted string is a comment (docstring) only when it starts
+        # a statement. After code on the same line (``x = """..."""``, a
+        # return value), or on the line after an opening bracket, comma, or
+        # ``=`` (a call argument or value), it is a string and part of the code.
+        # A code run stops only before a line that starts with a triple quote;
+        # there, the character before the newline decides.
+        return re.compile(
+            r"(?P<comment>#.*?$)"
+            r"|(?P<multilinecomment1>\"\"\".*?\"\"\")"
+            r"|(?P<multilinecomment2>'''.*?''')"
+            r"|(?P<noncomment>[^#'\"]*?[^\s#'\"][ \t]*[rRbBuUfF]{0,2}"
+            r"(?:\"\"\".*?\"\"\"|'''.*?''')"
+            r"|(?:(?<=[(\[{,=])|(?<=[(\[{,=][ \t]))\n[ \t]*[rRbBuUfF]{0,2}"
+            r"(?:\"\"\".*?\"\"\"|'''.*?''')"
+            r"|'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\""
+            r"|.(?:[^#'\"\n]+|\n(?![ \t]*[rRbBuUfF]{0,2}(?:\"\"\"|''')))*)",
+            re.DOTALL | re.MULTILINE)
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Triple-quoted strings first, then single-line ones."""
+        return re.compile(r'(?:"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\')')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

@@ -14,7 +14,7 @@ readme = "docs/intro.rst"
 requires-python = ">=3.8"
 classifiers = [
     "Environment :: Console",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
@@ -31,6 +31,14 @@ classifiers = [
 [project.optional-dependencies]
 accurate = [
   "pygments",
+]
+ast = [
+  "tree-sitter",
+  "tree-sitter-language-pack",
+]
+semantic = [
+  "torch",
+  "transformers",
 ]
 dev = [
   "flake8",

@@ -21,8 +21,7 @@ class Yaml(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # A # starts a comment only after whitespace; quoted scalars are kept whole.
         return re.compile(
-            r'(?P<comment>#.*?$)|(?P<noncomment>.[^#]*)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>(?:^|(?<=[ \t]))#.*?$)|(?P<noncomment>(?:(?<=[\s:,\[{-])|^)(?:\"(?:\\.|[^\\\"\n])*\"|'(?:''|[^'\n])*')|.[^#\"'\n]*|.)",
+            re.DOTALL | re.MULTILINE)

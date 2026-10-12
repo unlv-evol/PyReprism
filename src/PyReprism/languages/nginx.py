@@ -24,8 +24,11 @@ class Nginx(BaseLanguage):
         return []
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>.[^#]*)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Quoted values are kept whole.
+        return re.compile(
+            r"(?P<comment>#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^#\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

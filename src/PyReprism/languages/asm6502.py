@@ -33,12 +33,11 @@ class Asm6502(BaseLanguage):
         ]
 
     @classmethod
-    def comment_regex(cls):
-        """Compile and return a regex that captures semicolon comments and non-comment text.
-
-        :rtype: re.Pattern
-        """
-        return re.compile(r'(?P<comment>;.*?$)|(?P<noncomment>[^;]*)', re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings and character literals are kept whole.
+        return re.compile(
+            r"(?P<comment>;.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'.'|.[^;\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

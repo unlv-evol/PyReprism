@@ -18,7 +18,10 @@ class GraphSql(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]+)', re.MULTILINE)
+        # Block strings and strings are kept whole.
+        return re.compile(
+            r"(?P<comment>#.*?$)|(?P<noncomment>\"\"\"[\s\S]*?\"\"\"|\"(?:\\.|[^\\\"\n])*\"|.[^#\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:
@@ -34,17 +37,6 @@ class GraphSql(BaseLanguage):
         if not kws:
             return re.compile(r'(?!x)x')
         return re.compile(r'\b(' + '|'.join(kws) + r')\b')
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

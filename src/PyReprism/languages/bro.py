@@ -20,8 +20,11 @@ class Bro(BaseLanguage):
         ]
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>.[^#]*)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings are kept whole.
+        return re.compile(
+            r"(?P<comment>#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|.[^#\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

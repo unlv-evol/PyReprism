@@ -18,7 +18,7 @@ class CPP(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        pattern = re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
+        pattern = re.compile(r"(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|.[^/\\'\"]*)", re.DOTALL | re.MULTILINE)
         return pattern
 
     @classmethod

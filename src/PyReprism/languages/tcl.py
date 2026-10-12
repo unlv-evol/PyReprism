@@ -23,8 +23,10 @@ class Tcl(BaseLanguage):
 
 	@classmethod
 	def comment_regex(cls) -> re.Pattern:
-		pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]+)', re.MULTILINE)
-		return pattern
+		# A # starts a comment only where a command starts.
+		return re.compile(
+			r"(?P<comment>(?:^|(?<=;))[ \t]*#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"])*\"|[^\n;\"]+|.)",
+			re.DOTALL | re.MULTILINE)
 
 	@classmethod
 	def operator_regex(cls) -> re.Pattern:

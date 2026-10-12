@@ -18,10 +18,10 @@ class Elixir(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        # Use a conservative line-comment matcher for Elixir (#). Avoid
-        # embedding triple-quoted literals in the source regex to keep the
-        # implementation simple and safe.
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]+)', re.MULTILINE)
+        # Heredocs, strings, and character literals such as ?# are kept whole.
+        return re.compile(
+            r"(?P<comment>#.*?$)|(?P<noncomment>\"\"\"[\s\S]*?\"\"\"|'''[\s\S]*?'''|\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*'|\?\\?.|.[^#\"'?]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:
@@ -37,17 +37,6 @@ class Elixir(BaseLanguage):
         if not kws:
             return re.compile(r'(?!x)x')
         return re.compile(r'\b(' + '|'.join(kws) + r')\b')
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

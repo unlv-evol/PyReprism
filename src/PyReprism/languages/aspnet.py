@@ -27,15 +27,10 @@ class Aspnet(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """Compile and return a regex that matches C-style, '//' and HTML comments.
-
-        :rtype: re.Pattern
-        """
-        # Match C-style block comments, // line comments and HTML comments <!-- -->
+        # Quoted values (e.g. URLs) are kept whole.
         return re.compile(
-            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->|<%--[\s\S]*?--%>)|(?P<noncomment>.[^/<]*)",
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|<!--[\s\S]*?-->|<%--[\s\S]*?--%>)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^/<\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):
@@ -62,29 +57,6 @@ class Aspnet(BaseLanguage):
         :rtype: re.Pattern
         """
         return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b')
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        """Remove comments from ASP.NET/HTML-like content.
-
-        Preserves non-comment fragments (including strings) and returns either
-        a list of fragments or a joined string depending on ``isList``.
-
-        :param source_code: input source text
-        :type source_code: str
-        :param isList: if True return a list of fragments
-        :type isList: bool
-        :rtype: list[str] or str
-        """
-        # Preserve original behavior: only append truthy 'noncomment' groups.
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

@@ -21,8 +21,7 @@ class Properties(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # Only lines that start with # or ! are comments.
         return re.compile(
-            r'(?P<comment>[#!].*?$)|(?P<noncomment>.[^#!]*)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>^[ \t]*[#!].*?$)|(?P<noncomment>[^\n]+|\n)",
+            re.DOTALL | re.MULTILINE)

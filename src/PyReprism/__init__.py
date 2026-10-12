@@ -21,7 +21,7 @@ from .metrics import CodeStats, Halstead
 from .tokens import Token, TokenType
 from .utils.normalizer import Normalizer
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 LanguageLike = Union[str, "type"]
 
@@ -312,14 +312,7 @@ def code_metrics(source: str, lang: LanguageLike, engine: str = 'regex') -> dict
     if _is_regex(engine):
         return _resolve(lang).code_metrics(source)
     from . import _tokenops
-    tokens = _engine_tokens(source, lang, engine)
-    stats_obj = _tokenops.stats(tokens, source)
-    data = stats_obj.as_dict()
-    data['halstead'] = _tokenops.halstead(tokens).as_dict()
-    data['cyclomatic_complexity'] = _tokenops.cyclomatic(tokens)
-    data['max_nesting_depth'] = _tokenops.max_nesting_depth(tokens)
-    data['maintainability_index'] = _tokenops.maintainability_index(tokens, stats_obj.code_lines)
-    return data
+    return _tokenops.code_metrics(_engine_tokens(source, lang, engine), source)
 
 
 def normalize(source: str, lang: LanguageLike, engine: str = 'regex', **options) -> str:

@@ -20,9 +20,14 @@ class Tsx(BaseLanguage):
     @classmethod
     def comment_regex(cls) -> re.Pattern:
         return re.compile(
-            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|[^/\'\"\n]+)",
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>(?:(?<=[=(,:\[!&|?{};])|(?<=[=(,:\[!&|?{};] ))/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n\[])+/[a-z]*|'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|`(?:\\.|[^\\`])*`|.[^/\'\"`\n]*)",
             re.DOTALL | re.MULTILINE,
         )
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Quoted strings and template literals (`...`)."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:
@@ -35,17 +40,6 @@ class Tsx(BaseLanguage):
     @classmethod
     def keywords_regex(cls) -> re.Pattern:
         return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b')
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

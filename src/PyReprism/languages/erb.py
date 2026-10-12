@@ -22,25 +22,8 @@ class Erb(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """Return a regex to match ERB comments and non-comment text.
+        # Comments are <%# %> tags and HTML comments; # in markup is text.
+        return re.compile(
+            r"(?P<comment><%#[\s\S]*?%>|<!--[\s\S]*?-->)|(?P<noncomment>.[^<]*)",
+            re.DOTALL | re.MULTILINE)
 
-        :rtype: re.Pattern
-        """
-        return re.compile(r'(?P<comment><!--.*?-->|#.*?$)|(?P<noncomment>[^#<\n]+)', re.DOTALL | re.MULTILINE)
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        """Remove comments from the given ERB source code.
-
-        :param source_code: The ERB source code to process.
-        :param isList: If True, return a list of non-comment segments; otherwise, return a single string.
-        :rtype: str or list[str]    
-        """
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)

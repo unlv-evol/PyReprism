@@ -31,15 +31,10 @@ class Icon(BaseLanguage):
 
 	@classmethod
 	def comment_regex(cls) -> re.Pattern:
-		"""Return a regex capturing Icon comments and non-comment fragments.
-
-		Icon uses single-line comments starting with "#". Provide a forgiving
-		pattern returning named groups 'comment' and 'noncomment'.
-
-		:rtype: re.Pattern
-		"""
-		pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]+)', re.MULTILINE)
-		return pattern
+		# Strings and csets are kept whole.
+		return re.compile(
+			r"(?P<comment>#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^#\"']*)",
+			re.DOTALL | re.MULTILINE)
 
 	@classmethod
 	def operator_regex(cls) -> re.Pattern:

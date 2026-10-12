@@ -13,6 +13,9 @@ PyReprism documentation!
    metrics
    ngrams
    fingerprints
+   clones
+   syntactic
+   semantic
    engines
    batch
    diffs

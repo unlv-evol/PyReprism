@@ -15,8 +15,11 @@ class LUA(BaseLanguage):
         return 'and|break|do|else|elseif|end|false|for|function|if|in|local|nil|not|or|repeat|return|then|true|until|while'.split('|')
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>--\[\[.*?\]\]|--.*?$)|(?P<noncomment>[^-\n]+)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Long brackets [[...]] and [==[...]==] are strings or, after --, comments.
+        return re.compile(
+            r"(?P<comment>--\[(?P<ceq>=*)\[[\s\S]*?\](?P=ceq)\]|--.*?$)|(?P<noncomment>\[(?P<seq>=*)\[[\s\S]*?\](?P=seq)\]|\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^-\[\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

@@ -34,17 +34,11 @@ class Docker(BaseLanguage):
         return keyword
 
     @classmethod
-    def comment_regex(cls):
-        """Return a regex capturing Dockerfile comments and non-comment text.
-
-        Matches lines starting with ``#`` as comments. The compiled pattern
-        provides named groups ``comment`` and ``noncomment`` required by
-        BaseLanguage.remove_comments.
-
-        :rtype: re.Pattern
-        """
-        pattern = re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#\n]+)', re.MULTILINE)
-        return pattern
+    def comment_regex(cls) -> re.Pattern:
+        # Only lines that start with # are comments.
+        return re.compile(
+            r"(?P<comment>^[ \t]*#.*?$)|(?P<noncomment>[^\n]+|\n)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

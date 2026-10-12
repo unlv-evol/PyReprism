@@ -36,9 +36,11 @@ class AppleScript(BaseLanguage):
         return kw.split('|')
 
     @classmethod
-    def comment_regex(cls):
-        # Support: -- comment, # comment, and block comments (* ... *)
-        return re.compile(r'(?P<comment>--.*?$|#.*?$|\(\*[\s\S]*?\*\))|(?P<noncomment>[^#\-\(\*)]+)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings are kept whole.
+        return re.compile(
+            r"(?P<comment>--.*?$|#.*?$|\(\*[\s\S]*?\*\))|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|.[^-#(\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

@@ -95,9 +95,12 @@ def test_cli_similarity(tmp_path, capsys):
 
 
 def test_cli_clones(tmp_path, capsys):
+    # These short Type-2 snippets are below the located-clone size floor, so use
+    # the file-level near-duplicate path (--near) which the clones command now
+    # unifies alongside exact and semantic clones.
     (tmp_path / 'a.py').write_text(ORIGINAL)
     (tmp_path / 'b.py').write_text(RENAMED)
     (tmp_path / 'c.py').write_text(UNRELATED)
-    assert main(['clones', str(tmp_path), '--threshold', '0.5']) == 0
+    assert main(['clones', str(tmp_path), '--near', '--threshold', '0.5']) == 0
     out = capsys.readouterr().out
     assert 'a.py' in out and 'b.py' in out and 'c.py' not in out
