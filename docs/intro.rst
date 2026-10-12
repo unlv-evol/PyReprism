@@ -13,9 +13,10 @@ normalization, and diff/pull-request analysis.
 
 Everything is derived from one lossless token stream, and the same substrate
 anchors a **fidelity ladder** of optional-cost tiers: a zero-dependency
-**lexical** tier (default), an optional **syntactic** tier (:doc:`tree-sitter
-ASTs <syntactic>` for precise per-function metrics), and an optional **semantic**
-tier (:doc:`code embeddings <semantic>` for Type-4 clone detection).
+**lexical** tier (default), an optional **syntactic** tier (`tree-sitter ASTs
+<https://pyreprism.readthedocs.io/en/latest/syntactic.html>`__ for precise per-function metrics),
+and an optional **semantic** tier (`code embeddings
+<https://pyreprism.readthedocs.io/en/latest/semantic.html>`__ for Type-4 clone detection).
 
 Highlights
 ==========
@@ -26,10 +27,22 @@ Highlights
   clone/plagiarism detection and code-embedding pipelines.
 * Optional high-accuracy `Pygments`_ backend and an on-demand Pygments fallback
   for 500+ languages — with **zero required dependencies** by default.
-* Optional :doc:`syntactic (AST) <syntactic>` and :doc:`semantic (embedding)
-  <semantic>` tiers for precise per-function metrics and Type-4 clone detection.
-* Batch/corpus analysis and unified/``git`` diff processing.
+* Optional `syntactic (AST) <https://pyreprism.readthedocs.io/en/latest/syntactic.html>`__ and
+  `semantic (embedding) <https://pyreprism.readthedocs.io/en/latest/semantic.html>`__ tiers for
+  precise per-function metrics and Type-4 clone detection.
+* Located clone detection with console, JSON, SARIF, Markdown, and HTML
+  reports and a duplication gate for CI (also as a GitHub Action).
+* Batch/corpus analysis on every core, and unified/``git`` diff processing.
 * A ``pyreprism`` command-line tool (also ``python -m PyReprism``).
+
+Stability
+=========
+
+PyReprism 1.0 is the first stable release. From 1.0 on, releases follow
+`semantic versioning`_: the public API and the ``pyreprism`` command line change
+incompatibly only in a new major version. Modules whose names start with an
+underscore are internal. Token classifications may still change in minor
+releases when they fix a lexer defect; the changelog lists every such change.
 
 Requirements
 ============
@@ -84,6 +97,7 @@ Command line
     pyreprism remove comments file.py
     pyreprism scan myproject/ --csv          # aggregate code metrics over a tree
     git diff | pyreprism diff --cosmetic     # flag comment/whitespace-only changes
+    pyreprism clones src/ --max-duplication 5   # located clones; fail above 5%
 
 Documentation
 =============
@@ -109,3 +123,4 @@ See ``CONTRIBUTING.md`` for contribution guidelines.
 
 .. _Python: https://www.python.org
 .. _Pygments: https://pygments.org
+.. _semantic versioning: https://semver.org

@@ -45,7 +45,9 @@ disk; missing files are skipped)::
 
 On the command line, ``pyreprism clones`` exposes ``--min-tokens`` / ``--min-lines``,
 ``--near`` / ``--semantic``, ``--reporter {console,json,sarif,markdown,html}``, and a
-``--max-duplication PCT`` CI gate (non-zero exit above the threshold)::
+``--max-duplication PCT`` CI gate (non-zero exit above the threshold). It uses one
+process per CPU by default (``-j 1`` for one process; ``jobs=`` in
+``clones.detect``), with identical results::
 
    pyreprism clones src/ --near --reporter html --max-duplication 5 > clones.html
 

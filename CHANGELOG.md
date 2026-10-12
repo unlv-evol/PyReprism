@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-12
+
+The first stable release. The public API (the top-level functions, the
+language classes, `Token`/`TokenType`, `CodeStats`, and the `batch`, `diffs`,
+`fingerprints`, `ngrams`, `clones`, `reporters`, `syntactic`, and `semantic`
+modules) and the `pyreprism` command line now follow semantic versioning:
+breaking changes only in a new major version. This release adds located clone
+detection with CI reports, optional syntactic and semantic tiers, and parallel
+processing; makes tokenization several times faster; and fixes the lexer
+defects found by validating token classes against tree-sitter parses on a
+project-stratified sample of open-source code.
+
 ### Added
+- **Located clones and reports** (`PyReprism.clones`, `PyReprism.reporters`):
+  `clones.detect()` finds which line ranges are duplicated between files
+  (Rabin-Karp over the normalized token stream, with jscpd-style
+  `min_tokens`/`min_lines` floors), optionally adds Type-3 near-duplicate files
+  (`near=True`) and Type-4 semantic clones (`semantic=True`), and reports the
+  percentage of duplicated lines. Reporters render console, JSON, SARIF (one
+  rule id per clone kind), Markdown, and a self-contained HTML page. CLI:
+  `pyreprism clones --reporter ... --max-duplication PCT` (non-zero exit above
+  the threshold, for CI).
+- **Syntactic tier** (`PyReprism.syntactic`, `pip install "PyReprism[ast]"`):
+  tree-sitter ASTs for exact cyclomatic complexity and per-function metrics
+  (`cyclomatic()`, `functions()`).
+- **Semantic tier** (`PyReprism.semantic`, `pip install "PyReprism[semantic]"`):
+  code embeddings for Type-4 clone detection (`embed()`, `similarity()`, and an
+  `EmbeddingIndex` mirroring `FingerprintIndex`).
+- **GitHub Action** (`action.yml`, "PyReprism Clone Gate") and a `Dockerfile`
+  for the CLI, to gate pull requests on duplication.
 - Parallel processing: `jobs=` on `batch.analyze`, `batch.transform`, and
   `clones.detect`, and a new `batch.map_files(paths, fn, jobs=...)` that runs any
   per-file function on all cores. `pyreprism scan` and `pyreprism clones` take
@@ -40,8 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pyreprism clones --max-duplication`: when stdout and stderr go to the same log
   (as in CI), the gate message could be written into the middle of the report's
   summary line. stdout is now flushed before the gate message.
-- Defects found by validating token classes against tree-sitter parses
-  (`manuscript/scripts/experiments_token_oracle.py`):
+- Defects found by validating token classes against tree-sitter parses:
   - `remove_comments` dropped text that a language's comment regex skips (e.g.
     the `/` in `#include "api/z3.h"`, a `{` in Scala). The base implementation
     now keeps it, and 20 modules that duplicated the old loop inherit it.
@@ -175,7 +203,8 @@ ML-oriented normalization, an optional accurate backend, and batch processing.
 - Early beta releases: comment removal for an initial set of languages and the
   `Normalizer` whitespace helper.
 
-[Unreleased]: https://github.com/unlv-evol/PyReprism/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/unlv-evol/PyReprism/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/unlv-evol/PyReprism/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/unlv-evol/PyReprism/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/unlv-evol/PyReprism/releases/tag/v0.1.0
 [0.0.4]: https://github.com/unlv-evol/PyReprism/releases/tag/v0.0.4
