@@ -20,8 +20,10 @@ class Scheme(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        # Scheme: ; line comments, and block comments #| ... |#
-        return re.compile(r"(?P<comment>;.*?$|#\|[\s\S]*?\|#)|(?P<noncomment>[^;#\n]+)", re.DOTALL | re.MULTILINE)
+        # Strings and character literals such as #\; are kept whole.
+        return re.compile(
+            r"(?P<comment>;.*?$|#\|[\s\S]*?\|#)|(?P<noncomment>#\\.|\"(?:\\.|[^\\\"])*\"|.[^;#\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:
@@ -35,17 +37,6 @@ class Scheme(BaseLanguage):
     @classmethod
     def keywords_regex(cls) -> re.Pattern:
         return re.compile(r"^$")
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

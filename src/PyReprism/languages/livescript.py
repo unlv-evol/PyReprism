@@ -15,8 +15,11 @@ class LiveScript(BaseLanguage):
         return ''.split('|')
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>#.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>.[^#/]*)', re.MULTILINE | re.DOTALL)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings are kept whole.
+        return re.compile(
+            r"(?P<comment>#.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*'|.[^#/\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

@@ -56,24 +56,6 @@ class Arff(BaseLanguage):
         return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")
 
     @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        """Remove comment lines starting with '%' from ARFF content.
-
-        :param source_code: input ARFF text
-        :type source_code: str
-        :param isList: if True return list of non-comment fragments
-        :type isList: bool
-        :rtype: list[str] or str
-        """
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
-
-    @classmethod
     def remove_keywords(cls, source: str):
         """Remove ARFF keywords from the provided source string.
 

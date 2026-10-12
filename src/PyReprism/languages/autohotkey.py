@@ -16,8 +16,11 @@ class AutoHotKey(BaseLanguage):
         return keyword
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>;.*?$)|(?P<noncomment>[^;]*)', re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings double their quotes; `; is an escaped semicolon.
+        return re.compile(
+            r"(?P<comment>;.*?$)|(?P<noncomment>`.|\"(?:\"\"|[^\"\n])*\"|.[^;\"`]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):
@@ -30,16 +33,6 @@ class AutoHotKey(BaseLanguage):
     @classmethod
     def keywords_regex(cls):
         return re.compile(r"\b(" + "|".join(cls.keywords()) + r")\b")
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            if match.group('noncomment'):
-                result.append(match.group('noncomment'))
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str):

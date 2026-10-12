@@ -19,5 +19,8 @@ class Qore(BaseLanguage):
 
 	@classmethod
 	def comment_regex(cls) -> re.Pattern:
-		return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/\n]+)', re.DOTALL | re.MULTILINE)
+		# Strings are kept whole.
+		return re.compile(
+			r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^/\"']*)",
+			re.DOTALL | re.MULTILINE)
 

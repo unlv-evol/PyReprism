@@ -24,8 +24,7 @@ class Scss(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # Strings and unquoted url(...) values are kept whole.
         return re.compile(
-            r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>.[^/]*)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|url\([^)\"']*\)|.[^/\"'u]*)",
+            re.DOTALL | re.MULTILINE)

@@ -16,8 +16,11 @@ class CoffeeScript(BaseLanguage):
         return keyword
 
     @classmethod
-    def comment_regex(cls):
-        return re.compile(r'(?P<comment>###[\s\S]*?###|#.*?$)|(?P<noncomment>.[^#]*)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Block strings and strings (with #{} interpolation) are kept whole.
+        return re.compile(
+            r"(?P<comment>###[\s\S]*?###|#.*?$)|(?P<noncomment>\"\"\"[\s\S]*?\"\"\"|'''[\s\S]*?'''|\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*'|.[^#\"']*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

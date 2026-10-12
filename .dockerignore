@@ -1,0 +1,18 @@
+# Keep the build context small: only pyproject.toml, LICENSE, docs/intro.rst,
+# and src/ are needed to build the wheel (see Dockerfile).
+.git
+.github
+manuscript
+tests
+venv
+.venv
+docs/*
+!docs/intro.rst
+*.egg-info
+__pycache__
+.pytest_cache
+.mypy_cache
+dist
+build
+*.pyc
+.DS_Store

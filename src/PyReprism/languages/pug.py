@@ -24,8 +24,7 @@ class Pug(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # Comments take their own line; // in text or attributes is code.
         return re.compile(
-            r'(?P<comment>//-?.*?$)|(?P<noncomment>.[^/]*|/)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>^[ \t]*//-?.*?$)|(?P<noncomment>[^\n]+|\n)",
+            re.DOTALL | re.MULTILINE)

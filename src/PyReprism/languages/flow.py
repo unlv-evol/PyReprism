@@ -16,15 +16,8 @@ class Flow(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        return re.compile(r'(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>[^/\n]+)', re.DOTALL | re.MULTILINE)
+        # Strings and template literals are kept whole.
+        return re.compile(
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|`(?:\\.|[^\\`])*`|.[^/\"'`]*)",
+            re.DOTALL | re.MULTILINE)
 
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)

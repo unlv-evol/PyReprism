@@ -24,16 +24,11 @@ class ActionScript(BaseLanguage):
         return 'as|break|case|catch|class|const|default|delete|do|else|extends|finally|for|function|if|implements|import|in|instanceof|interface|internal|is|native|new|null|package|private|protected|public|return|super|switch|this|throw|try|typeof|use|var|void|while|with|dynamic|each|final|get|include|namespace|native|override|set|static'.split('|')
 
     @classmethod
-    def comment_regex(cls):
-        """Compile and return a regex that separates comments from non-comment code.
-
-        The pattern provides a named capture group ``comment`` for comment
-        fragments and ``noncomment`` for code fragments.
-
-        :rtype: re.Pattern
-        """
-        # Keep the original pattern that captures // and /* */ comments and preserves non-comment sequences
-        return re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Strings are kept whole.
+        return re.compile(
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|'(?:\\.|[^\\'\n])*'|.[^/\\'\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

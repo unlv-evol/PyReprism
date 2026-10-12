@@ -8,6 +8,10 @@ Usage examples::
     pyreprism count comments file.py --lang python
     pyreprism preprocess --steps comments,strings,whitespace file.java
     pyreprism tokenize --json file.py
+    pyreprism clones src/                         # located duplicate fragments
+    pyreprism clones src/ --semantic --reporter sarif   # + Type-4, SARIF for CI
+    pyreprism clones src/ --reporter html > clones.html # self-contained HTML report
+    pyreprism clones src/ --max-duplication 5     # fail CI over 5% duplication
     pyreprism languages
     pyreprism languages --pygments
 """
@@ -210,7 +214,7 @@ def _cmd_scan(args) -> int:
     from .batch import analyze
 
     report = analyze(args.paths, engine=args.engine, recursive=not args.no_recursive,
-                     include=args.include, exclude=args.exclude)
+                     include=args.include, exclude=args.exclude, jobs=args.jobs)
     if args.json:
         print(report.to_json())
         return 0
@@ -321,15 +325,28 @@ def _cmd_similarity(args) -> int:
 
 
 def _cmd_clones(args) -> int:
-    from .fingerprints import FingerprintIndex
-    index = FingerprintIndex(k=args.k, w=args.w, normalize=not args.no_normalize,
-                             types=args.types)
-    index.add_paths(args.paths)
-    pairs = index.similar_pairs(args.threshold)
-    for first, second, score in pairs:
-        print(f"{score:.4f}\t{first}\t{second}")
-    if not pairs:
-        print(f"no file pairs at or above similarity {args.threshold}", file=sys.stderr)
+    from . import clones as clones_mod
+    from . import reporters
+    report = clones_mod.detect(
+        args.paths, lang=args.lang,
+        min_tokens=args.min_tokens, min_lines=args.min_lines,
+        normalize=not args.no_normalize,
+        near=args.near, near_threshold=args.threshold,
+        semantic=args.semantic, semantic_threshold=args.semantic_threshold,
+        semantic_functions=not args.file_level_semantic, jobs=args.jobs)
+    if args.reporter == 'html':
+        target = args.paths[0] if len(args.paths) == 1 else f'{len(args.paths)} paths'
+        print(reporters.to_html(report, target=target,
+                                max_duplication=args.max_duplication))
+    else:
+        print(reporters.render(report, args.reporter))
+    if args.max_duplication is not None and report.duplication_pct > args.max_duplication:
+        # Flush first so the report precedes the gate message when both streams
+        # go to one log (CI), where stdout is block-buffered.
+        sys.stdout.flush()
+        print(f"pyreprism: duplication {report.duplication_pct}% exceeds "
+              f"the {args.max_duplication}% threshold", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -428,7 +445,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog='pyreprism',
         description='Preprocess source code: strip/extract/count comments, strings, '
-                    'numbers, operators, keywords and identifiers across 160+ '
+                    'numbers, operators, keywords and identifiers across 187 '
                     'built-in languages (500+ with the optional Pygments backend).',
     )
     parser.add_argument('--version', action='version', version=f'pyreprism {__version__}')
@@ -516,6 +533,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help='skip files matching GLOB (repeatable)')
     p_scan.add_argument('--no-recursive', action='store_true',
                         help='do not descend into subdirectories')
+    p_scan.add_argument('-j', '--jobs', type=int, default=0, metavar='N',
+                        help='worker processes (default: 0, one per CPU; 1: no parallelism)')
     p_scan.set_defaults(func=_cmd_scan)
 
     p_diff = sub.add_parser('diff',
@@ -565,11 +584,34 @@ def build_parser() -> argparse.ArgumentParser:
     p_sim.set_defaults(func=_cmd_similarity)
 
     p_clones = sub.add_parser('clones',
-                              help='find similar/duplicate files in a tree (clone/plagiarism)')
+                              help='find duplicate/clone code (located fragments + reports)')
     p_clones.add_argument('paths', nargs='+', help='directories or files')
-    p_clones.add_argument('--threshold', type=float, default=0.6,
-                          help='minimum similarity to report (default: 0.6)')
-    add_fingerprint_opts(p_clones)
+    p_clones.add_argument('-l', '--lang',
+                          help='language (default: auto-detect per file)')
+    p_clones.add_argument('--min-tokens', type=int, default=50,
+                          help='minimum clone size in tokens (default: 50)')
+    p_clones.add_argument('--min-lines', type=int, default=5,
+                          help='minimum clone size in lines (default: 5)')
+    p_clones.add_argument('--no-normalize', action='store_true',
+                          help='match raw tokens (not rename-invariant)')
+    p_clones.add_argument('--reporter',
+                          choices=['console', 'json', 'sarif', 'markdown', 'html'],
+                          default='console', help='output format (default: console)')
+    p_clones.add_argument('--near', action='store_true',
+                          help='also report Type-3 near-duplicate files (fingerprints)')
+    p_clones.add_argument('--threshold', type=float, default=0.8,
+                          help='similarity threshold for --near (default: 0.8)')
+    p_clones.add_argument('--semantic', action='store_true',
+                          help='also report Type-4 semantic clones (needs [semantic])')
+    p_clones.add_argument('--semantic-threshold', type=float, default=0.8,
+                          help='cosine threshold for --semantic (default: 0.8)')
+    p_clones.add_argument('--file-level-semantic', action='store_true',
+                          help='embed whole files instead of functions for --semantic')
+    p_clones.add_argument('--max-duplication', type=float, default=None,
+                          metavar='PCT',
+                          help='exit non-zero if %% duplicated lines exceeds PCT (CI gate)')
+    p_clones.add_argument('-j', '--jobs', type=int, default=0, metavar='N',
+                          help='worker processes (default: 0, one per CPU; 1: no parallelism)')
     p_clones.set_defaults(func=_cmd_clones)
 
     p_langs = sub.add_parser('languages', help='list supported languages and extensions')

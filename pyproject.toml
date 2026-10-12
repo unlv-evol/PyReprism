@@ -32,6 +32,14 @@ classifiers = [
 accurate = [
   "pygments",
 ]
+ast = [
+  "tree-sitter",
+  "tree-sitter-language-pack",
+]
+semantic = [
+  "torch",
+  "transformers",
+]
 dev = [
   "flake8",
   "pytest",

@@ -22,7 +22,12 @@ class JavaScript(BaseLanguage):
         # Do not treat braces as comments.
         # Allow newlines in noncomment groups so original line breaks are
         # preserved when comments are removed.
-        return re.compile(r"(?P<comment>//.*?$|/\*.*?\*/)|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|[^/\\'\"]+)", re.DOTALL | re.MULTILINE)
+        return re.compile(r"(?P<comment>//.*?$|/\*.*?\*/)|(?P<noncomment>(?:(?<=[=(,:\[!&|?{};])|(?<=[=(,:\[!&|?{};] ))/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n\[])+/[a-z]*|'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|`(?:\\.|[^\\`])*`|.[^/\\'\"`]*)", re.DOTALL | re.MULTILINE)
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Quoted strings and template literals (`...`)."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

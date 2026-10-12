@@ -1,0 +1,79 @@
+name: 'PyReprism Clone Gate'
+description: >-
+  Detect duplicate/clone code across 187 languages and fail CI above a
+  duplication threshold. Emits console/JSON/SARIF/Markdown/HTML reports.
+author: 'UNLV EVOL Lab'
+branding:
+  icon: 'copy'
+  color: 'orange'
+
+inputs:
+  paths:
+    description: 'Paths to scan (space-separated).'
+    required: false
+    default: '.'
+  reporter:
+    description: 'Output format: console, json, sarif, markdown, or html.'
+    required: false
+    default: 'sarif'
+  output:
+    description: >-
+      File (relative to the workspace) to write the report to. Leave empty to
+      print to the job log only.
+    required: false
+    default: 'pyreprism-clones.sarif'
+  max_duplication:
+    description: >-
+      Fail the job if the percentage of duplicated lines exceeds this value.
+      Empty disables the gate.
+    required: false
+    default: ''
+  min_tokens:
+    description: 'Minimum clone size in tokens.'
+    required: false
+    default: '50'
+  min_lines:
+    description: 'Minimum clone size in lines.'
+    required: false
+    default: '5'
+  near:
+    description: 'Also report Type-3 near-duplicate files.'
+    required: false
+    default: 'false'
+  semantic:
+    description: >-
+      Also report Type-4 semantic clones. Installs the heavier semantic/ast
+      tiers, which take longer to set up.
+    required: false
+    default: 'false'
+  lang:
+    description: 'Force a single language instead of auto-detecting per file.'
+    required: false
+    default: ''
+  extra_args:
+    description: 'Additional raw arguments appended to `pyreprism clones`.'
+    required: false
+    default: ''
+
+outputs:
+  report:
+    description: 'Path to the written report file (empty if none).'
+    value: ${{ steps.pyreprism.outputs.report }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: pyreprism
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/.github/pyreprism-action.sh"
+      env:
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_REPORTER: ${{ inputs.reporter }}
+        INPUT_OUTPUT: ${{ inputs.output }}
+        INPUT_MAX_DUPLICATION: ${{ inputs.max_duplication }}
+        INPUT_MIN_TOKENS: ${{ inputs.min_tokens }}
+        INPUT_MIN_LINES: ${{ inputs.min_lines }}
+        INPUT_NEAR: ${{ inputs.near }}
+        INPUT_SEMANTIC: ${{ inputs.semantic }}
+        INPUT_LANG: ${{ inputs.lang }}
+        INPUT_EXTRA_ARGS: ${{ inputs.extra_args }}

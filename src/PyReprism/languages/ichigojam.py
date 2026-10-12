@@ -31,15 +31,10 @@ class IchigoJam(BaseLanguage):
 
 	@classmethod
 	def comment_regex(cls) -> re.Pattern:
-		"""Return a regex capturing comments and non-comment fragments.
-
-		IchigoJam uses single-line comments starting with ``'`` and often
-		shell-style comments; capture both forms.
-
-		:rtype: re.Pattern
-		"""
-		pattern = re.compile(r"(?P<comment>'[^\n]*$|#.*?$)|(?P<noncomment>[^'\#\n]+)", re.MULTILINE)
-		return pattern
+		# Strings are kept whole.
+		return re.compile(
+			r"(?P<comment>'[^\n]*$|#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|.[^'#\"]*)",
+			re.DOTALL | re.MULTILINE)
 
 	@classmethod
 	def operator_regex(cls) -> re.Pattern:

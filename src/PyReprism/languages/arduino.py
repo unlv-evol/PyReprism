@@ -64,29 +64,6 @@ class Arduino(BaseLanguage):
         return re.compile(r'\b(' + '|'.join(cls.keywords()) + r')\b')
 
     @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        """Remove comments from Arduino/C-like source text.
-
-        This preserves string literals and returns either a list of non-comment
-        fragments or a combined string depending on ``isList``.
-
-        :param source_code: input source text
-        :type source_code: str
-        :param isList: if True, return list of fragments
-        :type isList: bool
-        :rtype: list[str] or str
-        """
-        # Preserve original behavior: append only truthy noncomment groups.
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
-
-    @classmethod
     def remove_keywords(cls, source: str) -> str:
         """Remove keywords from source using the compiled keywords regex.
 

@@ -24,8 +24,7 @@ class Roboconf(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """:rtype: re.Pattern"""
+        # Quoted values are kept whole.
         return re.compile(
-            r'(?P<comment>#.*?$)|(?P<noncomment>.[^#]*)',
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|.[^#\"]*)",
+            re.DOTALL | re.MULTILINE)

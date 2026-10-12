@@ -75,15 +75,11 @@ class ApacheConf(BaseLanguage):
         return kw.split('|')
 
     @classmethod
-    def comment_regex(cls):
-        """
-        ApacheConf comments start with # and go to the end of the line.
-        Capture strings and non-comment segments.
-        
-        :return: Compiled regex with 'comment' and 'noncomment' named groups.
-        :rtype: re.Pattern
-        """
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>[^#]*)', re.MULTILINE)
+    def comment_regex(cls) -> re.Pattern:
+        # Apache only allows comments on their own line.
+        return re.compile(
+            r"(?P<comment>^[ \t]*#.*?$)|(?P<noncomment>\"(?:\\.|[^\\\"\n])*\"|[^\n\"]+|.)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

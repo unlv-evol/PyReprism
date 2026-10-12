@@ -43,9 +43,14 @@ class Jsx(BaseLanguage):
         """
         # Line comments, C-style block comments, and JSX-style {/* ... */} blocks
         return re.compile(
-            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|\{/\*[\s\S]*?\*/\})|(?P<noncomment>'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|[^/\'\"\n]+)",
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/|\{/\*[\s\S]*?\*/\})|(?P<noncomment>(?:(?<=[=(,:\[!&|?{};])|(?<=[=(,:\[!&|?{};] ))/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n\[])+/[a-z]*|'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|`(?:\\.|[^\\`])*`|.[^/\'\"`\n]*)",
             re.DOTALL | re.MULTILINE,
         )
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Quoted strings and template literals (`...`)."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:
@@ -86,26 +91,6 @@ class Jsx(BaseLanguage):
         :rtype: re.Pattern
         """
         return re.compile(r'\b(?:true|false|null)\b')
-
-    @classmethod
-    def remove_comments(cls, source_code: str, isList: bool = False):
-        """Remove comments from source, returning either the joined string
-        or a list of non-comment fragments when isList is True.
-
-        :param source_code: the source text to process
-        :type source_code: str
-        :param isList: if True return list of fragments instead of string
-        :type isList: bool
-        :rtype: list[str] or str
-        """
-        result = []
-        for match in cls.comment_regex().finditer(source_code):
-            non = match.groupdict().get('noncomment')
-            if non:
-                result.append(non)
-        if isList:
-            return result
-        return ''.join(result)
 
     @classmethod
     def remove_keywords(cls, source: str) -> str:

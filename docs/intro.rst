@@ -6,9 +6,16 @@ Overview
 
 **PyReprism** is a Python framework for source-code preprocessing. It lets you
 **match, extract, count, and remove** comments, strings, numbers, operators,
-keywords and other language-specific constructs across **145+ programming
-languages and file formats** — through a small high-level API, a command-line
-tool, code metrics, ML-oriented normalization, and diff/pull-request analysis.
+keywords and other language-specific constructs across **187+ programming
+languages and file formats** (500+ with the optional Pygments backend) — through a
+small high-level API, a command-line tool, code metrics, ML-oriented
+normalization, and diff/pull-request analysis.
+
+Everything is derived from one lossless token stream, and the same substrate
+anchors a **fidelity ladder** of optional-cost tiers: a zero-dependency
+**lexical** tier (default), an optional **syntactic** tier (:doc:`tree-sitter
+ASTs <syntactic>` for precise per-function metrics), and an optional **semantic**
+tier (:doc:`code embeddings <semantic>` for Type-4 clone detection).
 
 Highlights
 ==========
@@ -17,8 +24,10 @@ Highlights
   ``count_*`` / ``match_*`` for each construct, plus a lossless ``tokenize()``.
 * Code metrics (``stats``) and ML canonicalization (``normalize``) for
   clone/plagiarism detection and code-embedding pipelines.
-* Optional high-accuracy `Pygments`_ backend — with **zero required
-  dependencies** by default.
+* Optional high-accuracy `Pygments`_ backend and an on-demand Pygments fallback
+  for 500+ languages — with **zero required dependencies** by default.
+* Optional :doc:`syntactic (AST) <syntactic>` and :doc:`semantic (embedding)
+  <semantic>` tiers for precise per-function metrics and Type-4 clone detection.
 * Batch/corpus analysis and unified/``git`` diff processing.
 * A ``pyreprism`` command-line tool (also ``python -m PyReprism``).
 
@@ -34,11 +43,13 @@ Install
 
     pip install PyReprism
 
-For the higher-accuracy tokenizer backend:
+The optional tiers are opt-in extras (install only what you need):
 
 .. code-block:: shell
 
-    pip install "PyReprism[accurate]"
+    pip install "PyReprism[accurate]"    # Pygments backend (higher lexical fidelity)
+    pip install "PyReprism[ast]"         # syntactic tier (tree-sitter)
+    pip install "PyReprism[semantic]"    # semantic tier (code embeddings)
 
 Quick start
 ===========

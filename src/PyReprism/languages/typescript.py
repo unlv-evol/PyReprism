@@ -21,9 +21,14 @@ class TypeScript(BaseLanguage):
     def comment_regex(cls) -> re.Pattern:
         # Capture // and /* */ comments; preserve string literals in 'noncomment'.
         return re.compile(
-            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|[^/\'\"\n]+)",
+            r"(?P<comment>//.*?$|/\*[\s\S]*?\*/)|(?P<noncomment>(?:(?<=[=(,:\[!&|?{};])|(?<=[=(,:\[!&|?{};] ))/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n\[])+/[a-z]*|'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|`(?:\\.|[^\\`])*`|.[^/\'\"`\n]*)",
             re.DOTALL | re.MULTILINE,
         )
+
+    @classmethod
+    def string_regex(cls) -> re.Pattern:
+        """Quoted strings and template literals (`...`)."""
+        return re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

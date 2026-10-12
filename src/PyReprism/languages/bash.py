@@ -17,7 +17,8 @@ class Bash(BaseLanguage):
 
     @classmethod
     def comment_regex(cls):
-        return re.compile(r'(?P<comment>#.*?$)|(?P<noncomment>'"'(\\.|[^\\'])*'"'|"(\\.|[^\\"])*"|.[^#\'\"]*)', re.DOTALL | re.MULTILINE)
+        # '#' starts a comment only at the start of a word: not in $#, ${#a}, or a#b.
+        return re.compile(r'(?P<comment>(?:^|(?<=[\s;|&()]))#.*?$)|(?P<noncomment>'"'(\\.|[^\\'])*'"'|"(\\.|[^\\"])*"|.[^#\'\"]*)', re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls):

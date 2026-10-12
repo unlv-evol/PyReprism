@@ -1,6 +1,6 @@
 """Token model shared by the tokenizer and the match/extract APIs."""
-from dataclasses import dataclass
 from enum import Enum
+from typing import NamedTuple
 
 
 class TokenType(str, Enum):
@@ -19,9 +19,12 @@ class TokenType(str, Enum):
         return self.value
 
 
-@dataclass(frozen=True)
-class Token:
+class Token(NamedTuple):
     """A single lexical token located within a source string.
+
+    Tokens are immutable. A named tuple rather than a dataclass keeps their
+    construction cheap, since a file yields one token per word, operator, or
+    run of whitespace.
 
     :param type: the :class:`TokenType` of the token.
     :param value: the exact substring the token spans.

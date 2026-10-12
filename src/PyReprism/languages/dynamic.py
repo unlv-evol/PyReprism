@@ -1,6 +1,6 @@
 """Long-tail language fallback backed by Pygments.
 
-The 145 first-class languages are hand-written, zero-dependency regex modules and
+The first-class languages are hand-written, zero-dependency regex modules and
 remain the default. When a caller asks for a language or extension that is *not*
 in the registry (say ``.zig`` or ``"solidity"``), and Pygments is installed, this
 module builds a lightweight :class:`~PyReprism.languages.base.BaseLanguage`

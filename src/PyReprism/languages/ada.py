@@ -25,18 +25,10 @@ class Ada(BaseLanguage):
 
     @classmethod
     def comment_regex(cls) -> re.Pattern:
-        """Compile and return a regex separating Ada comments and non-comment fragments.
-
-        Ada uses ``--`` for single-line comments. The pattern also preserves
-        string literals in the ``noncomment`` group.
-
-        :rtype: re.Pattern
-        """
-        # Ada uses '--' for single-line comments. Capture strings and non-comment segments.
+        # Strings double their quotes; a tick is a character literal only as 'x'.
         return re.compile(
-            r"(?P<comment>--.*?$)|(?P<noncomment>'(\\.|[^\\'])*'|\"(\\.|[^\\\"])*\"|.[^-']*)",
-            re.DOTALL | re.MULTILINE,
-        )
+            r"(?P<comment>--.*?$)|(?P<noncomment>\"(?:\"\"|[^\"\n])*\"|'.'|.[^-'\"]*)",
+            re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

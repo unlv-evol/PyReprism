@@ -124,3 +124,33 @@ def test_version(capsys):
         main(['--version'])
     assert excinfo.value.code == 0
     assert 'pyreprism' in capsys.readouterr().out
+
+
+def test_help_language_count_matches_registry():
+    import re
+    from PyReprism.cli import build_parser
+    from PyReprism.languages import _load_all_languages
+    from PyReprism.languages.registry import LanguageRegistry
+    _load_all_languages()
+    stated = re.search(r'across (\d+) built-in', build_parser().description)
+    assert stated and int(stated.group(1)) == len(LanguageRegistry.all())
+
+
+def test_clones_gate_message_follows_report(tmp_path):
+    # Merged, block-buffered streams (as in CI logs): the gate message must come
+    # after the report summary, on its own line.
+    import subprocess
+    import sys
+    body = ''.join(f"def f{i}(a, b):\n    c = a + b * {i}\n    return c - a\n\n"
+                   for i in range(6))
+    (tmp_path / 'a.py').write_text(body)
+    (tmp_path / 'b.py').write_text(body)
+    proc = subprocess.run(
+        [sys.executable, '-c', 'import sys; from PyReprism.cli import main; '
+         'sys.exit(main(sys.argv[1:]))', 'clones', str(tmp_path),
+         '--min-tokens', '8', '--min-lines', '3', '--max-duplication', '1'],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    assert proc.returncode == 1
+    lines = proc.stdout.rstrip('\n').split('\n')
+    assert lines[-1].startswith('pyreprism: duplication')
+    assert 'duplicated lines' in lines[-2]

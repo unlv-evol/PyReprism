@@ -32,7 +32,7 @@ class Java(BaseLanguage):
 
         :rtype: re.Pattern
         """
-        return re.compile(r'(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>[^/]+)', re.DOTALL | re.MULTILINE)
+        return re.compile(r"(?P<comment>//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*?/)|(?P<noncomment>\"\"\"[\s\S]*?\"\"\"|'(?:\\.|[^\\'])*'|\"(?:\\.|[^\\\"])*\"|.[^/\\'\"]*)", re.DOTALL | re.MULTILINE)
 
     @classmethod
     def number_regex(cls) -> re.Pattern:

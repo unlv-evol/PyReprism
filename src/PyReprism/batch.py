@@ -150,27 +150,64 @@ class BatchReport:
         return buffer.getvalue()
 
 
+def _language_in_worker(name: str, path: str):
+    from . import detect_language
+    from ._parallel import language
+    return language(name) or detect_language(filename=path)
+
+
+def _analyze_one(item) -> FileReport:
+    path, name, engine = item
+    try:
+        text = Path(path).read_text(encoding='utf-8', errors='replace')
+        cls = _language_in_worker(name, path)
+        if engine in (None, 'regex'):
+            stats = cls.stats(text)
+        else:
+            from . import _tokenops
+            from .engines import get_engine
+            stats = _tokenops.stats(get_engine(engine).tokenize(text, cls), text)
+        return FileReport(path, name, stats)
+    except Exception as exc:  # pragma: no cover - defensive I/O guard
+        return FileReport(path, name, None, str(exc))
+
+
 def analyze(paths: Union[PathLike, Sequence[PathLike]], *, engine: str = 'regex',
             recursive: bool = True, include: Optional[Sequence[str]] = None,
-            exclude: Optional[Sequence[str]] = None) -> BatchReport:
-    """Walk ``paths`` and compute :class:`CodeStats` for every supported file."""
-    from . import _tokenops
-    from .engines import get_engine
+            exclude: Optional[Sequence[str]] = None, jobs: Optional[int] = 1) -> BatchReport:
+    """Walk ``paths`` and compute :class:`CodeStats` for every supported file.
 
-    reports: List[FileReport] = []
-    use_regex = engine in (None, 'regex')
-    for _base, path, cls in iter_source_files(paths, recursive=recursive,
-                                              include=include, exclude=exclude):
-        try:
-            text = path.read_text(encoding='utf-8', errors='replace')
-            if use_regex:
-                stats = cls.stats(text)
-            else:
-                stats = _tokenops.stats(get_engine(engine).tokenize(text, cls), text)
-            reports.append(FileReport(str(path), cls.__name__, stats))
-        except Exception as exc:  # pragma: no cover - defensive I/O guard
-            reports.append(FileReport(str(path), cls.__name__, None, str(exc)))
-    return BatchReport(reports)
+    ``jobs`` sets the number of worker processes (``0`` or ``None``: one per
+    CPU); the report is the same for any value.
+    """
+    from ._parallel import pmap
+    items = [(str(path), cls.__name__, engine)
+             for _base, path, cls in iter_source_files(paths, recursive=recursive,
+                                                       include=include, exclude=exclude)]
+    return BatchReport(pmap(_analyze_one, items, jobs))
+
+
+def _apply_one(item):
+    fn, path, name = item
+    text = Path(path).read_text(encoding='utf-8', errors='replace')
+    return fn(text, _language_in_worker(name, path))
+
+
+def map_files(paths: Union[PathLike, Sequence[PathLike]], fn: Callable[[str, type], object], *,
+              recursive: bool = True, include: Optional[Sequence[str]] = None,
+              exclude: Optional[Sequence[str]] = None,
+              jobs: Optional[int] = 1) -> List[Tuple[str, type, object]]:
+    """Apply ``fn(text, language_cls)`` to every discovered file.
+
+    Returns ``(path, language_cls, result)`` in discovery order. With ``jobs``
+    other than 1, files are processed in parallel, and ``fn`` and its results
+    must be picklable (e.g. a module-level function returning plain data).
+    """
+    from ._parallel import pmap
+    found = [(path, cls) for _base, path, cls in
+             iter_source_files(paths, recursive=recursive, include=include, exclude=exclude)]
+    results = pmap(_apply_one, [(fn, str(p), c.__name__) for p, c in found], jobs)
+    return [(str(p), c, r) for (p, c), r in zip(found, results)]
 
 
 def _destination(base: Path, path: Path, output: Path) -> Path:
@@ -183,18 +220,22 @@ def transform(paths: Union[PathLike, Sequence[PathLike]],
               transformer: Callable[[str, type], str], *,
               output: Optional[PathLike] = None, in_place: bool = False,
               recursive: bool = True, include: Optional[Sequence[str]] = None,
-              exclude: Optional[Sequence[str]] = None) -> List[Tuple[str, str]]:
+              exclude: Optional[Sequence[str]] = None,
+              jobs: Optional[int] = 1) -> List[Tuple[str, str]]:
     """Apply ``transformer(text, language_cls)`` to every discovered file.
 
     With ``output`` the tree is mirrored under that directory; with ``in_place``
-    files are rewritten. Returns ``(path, status)`` pairs.
+    files are rewritten. Returns ``(path, status)`` pairs. With ``jobs`` other
+    than 1, transformations run in parallel and ``transformer`` must be
+    picklable (e.g. a module-level function).
     """
+    from ._parallel import pmap
     out_root = Path(output) if output else None
+    found = list(iter_source_files(paths, recursive=recursive,
+                                   include=include, exclude=exclude))
+    texts = pmap(_apply_one, [(transformer, str(p), c.__name__) for _b, p, c in found], jobs)
     results: List[Tuple[str, str]] = []
-    for base, path, cls in iter_source_files(paths, recursive=recursive,
-                                             include=include, exclude=exclude):
-        text = path.read_text(encoding='utf-8', errors='replace')
-        transformed = transformer(text, cls)
+    for (base, path, _cls), transformed in zip(found, texts):
         if out_root is not None:
             dest = _destination(base, path, out_root)
             dest.parent.mkdir(parents=True, exist_ok=True)

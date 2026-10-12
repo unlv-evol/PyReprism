@@ -22,7 +22,7 @@ SAMPLES = {
     'Abap': 'keepAA "zzsecretzz\nkeepBB\n',
     'ActionScript': 'keepAA //zzsecretzz\nkeepBB\n',
     'Ada': 'keepAA --zzsecretzz\nkeepBB\n',
-    'ApacheConf': 'keepAA #zzsecretzz\nkeepBB\n',
+    'ApacheConf': 'keepAA\n# zzsecretzz\nkeepBB\n',  # own-line comments only
     'Apl': 'keepAA ⍝zzsecretzz\nkeepBB\n',
     'AppleScript': 'keepAA #zzsecretzz\nkeepBB\n',
     'Arduino': 'keepAA //zzsecretzz\nkeepBB\n',
@@ -50,11 +50,11 @@ SAMPLES = {
     'Dart': 'keepAA //zzsecretzz\nkeepBB\n',
     'Diff': 'keepAA\n#zzsecretzz\nkeepBB\n',
     'Django': 'keepAA #zzsecretzz\nkeepBB\n',
-    'Docker': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Docker': 'keepAA\n# zzsecretzz\nkeepBB\n',  # own-line comments only
     'Eiffel': 'keepAA --zzsecretzz\nkeepBB\n',
     'Elixir': 'keepAA #zzsecretzz\nkeepBB\n',
     'ErLang': 'keepAA %zzsecretzz\nkeepBB\n',
-    'Erb': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Erb': 'keepAA <%# zzsecretzz %>\nkeepBB\n',
     'FSharp': 'keepAA //zzsecretzz\nkeepBB\n',
     'Flow': 'keepAA //zzsecretzz\nkeepBB\n',
     'ForTran': 'keepAA !zzsecretzz\nkeepBB\n',
@@ -120,9 +120,9 @@ SAMPLES = {
     'PowerShell': 'keepAA #zzsecretzz\nkeepBB\n',
     'Processing': 'keepAA //zzsecretzz\nkeepBB\n',
     'Prolog': 'keepAA %zzsecretzz\nkeepBB\n',
-    'Properties': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Properties': 'keepAA\n# zzsecretzz\nkeepBB\n',  # own-line comments only
     'Protobuf': 'keepAA //zzsecretzz\nkeepBB\n',
-    'Pug': 'keepAA //zzsecretzz\nkeepBB\n',
+    'Pug': 'keepAA\n// zzsecretzz\nkeepBB\n',  # own-line comments only
     'Puppet': 'keepAA #zzsecretzz\nkeepBB\n',
     'Pure': 'keepAA //zzsecretzz\nkeepBB\n',
     'Python': 'keepAA #zzsecretzz\nkeepBB\n',
@@ -147,7 +147,7 @@ SAMPLES = {
     'Soy': 'keepAA //zzsecretzz\nkeepBB\n',
     'Stylus': 'keepAA\n//zzsecretzz\nkeepBB\n',
     'Swift': 'keepAA //zzsecretzz\nkeepBB\n',
-    'Tcl': 'keepAA #zzsecretzz\nkeepBB\n',
+    'Tcl': 'keepAA ;# zzsecretzz\nkeepBB\n',  # comments start a command
     'Textile': 'keepAA #zzsecretzz\nkeepBB\n',
     'Tsx': 'keepAA //zzsecretzz\nkeepBB\n',
     'Twig': 'keepAA\n{#zzsecretzz#}\nkeepBB\n',

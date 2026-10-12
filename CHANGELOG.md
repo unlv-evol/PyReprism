@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Parallel processing: `jobs=` on `batch.analyze`, `batch.transform`, and
+  `clones.detect`, and a new `batch.map_files(paths, fn, jobs=...)` that runs any
+  per-file function on all cores. `pyreprism scan` and `pyreprism clones` take
+  `-j/--jobs` and use one process per CPU by default (`-j 1` for one process).
+  Reports are identical for any number of jobs.
+- Secondary file extensions map to their language: `.h` (C); `.cc`, `.cxx`,
+  `.hpp`, `.hh`, `.hxx` (C++); `.mjs`, `.cjs`, `.mts`, `.cts`; `.pyi`; `.bash`,
+  `.zsh`, `.ksh`; `.yml`; and others. These files were skipped before.
+
+### Changed
+- Faster tokenization (about 2.7x on one core) with identical tokens: each
+  language's string, number, identifier, and operator patterns are joined into
+  one pattern and compiled once, instead of being tried one by one at every
+  position; line numbers are tracked incrementally. `stats` (and `scan`)
+  count tokens as they are classified instead of building the token list
+  (about 4x faster than before on one core; same results). `code_metrics` computes
+  Halstead measures and complexity once instead of twice. Extension lookup no
+  longer re-imports every language module (1.4 ms to under 1 µs per file).
+- The Pygments engine is about 3x faster on large files with the same tokens:
+  it merged tokens by repeated string concatenation and counted each token's
+  line from the start of the file, both quadratic in file size.
+- `Token` is now an immutable `NamedTuple` instead of a frozen dataclass, which
+  makes tokens cheaper to create. Fields, attribute access, and immutability
+  are unchanged; a `Token` now also compares equal to a plain tuple with the
+  same values.
+
+### Fixed
+- `pyreprism --help` stated "160+ built-in languages"; it now says 187, matching
+  `pyreprism languages`. A test keeps the two in sync.
+- `pyreprism clones --max-duplication`: when stdout and stderr go to the same log
+  (as in CI), the gate message could be written into the middle of the report's
+  summary line. stdout is now flushed before the gate message.
+- Defects found by validating token classes against tree-sitter parses
+  (`manuscript/scripts/experiments_token_oracle.py`):
+  - `remove_comments` dropped text that a language's comment regex skips (e.g.
+    the `/` in `#include "api/z3.h"`, a `{` in Scala). The base implementation
+    now keeps it, and 20 modules that duplicated the old loop inherit it.
+  - C, C++, Java, and CSS strings containing `/` were split, so `//` or `/*`
+    inside them started a comment (Java text blocks are kept whole too).
+  - Python: only a triple-quoted string that starts a line is a docstring
+    (comment); `x = """..."""` and call arguments are strings.
+  - JavaScript, TypeScript, JSX, TSX: template literals are strings, and
+    regular-expression literals no longer start comments.
+  - Pygments engine: C preprocessor directives were typed as comments, and
+    Python docstrings as strings; both now follow the regex engine's policies.
+- Strings containing comment delimiters (`"a//b"`, `"a#b"`, `'--'`) were split
+  in 36 more languages, starting a comment inside the string: ActionScript,
+  Ada, AppleScript, Asm6502, ASP.NET, AutoHotkey, AutoIt, Bro, CoffeeScript,
+  Crystal, Elixir, Flow, GLSL, GraphQL, HPKP, HSTS, IchigoJam, Icon, Less,
+  LiveScript, Lua (including `[[...]]` long strings), Nginx, NSIS, PL/SQL, Qore,
+  Roboconf, Scheme (including `#\;` characters), SCSS (including unquoted
+  `url(...)`), and SQL. Comments now follow each language's rules in Apache
+  config, Dockerfiles, `.properties`, and Pug (own line only), Tcl (where a
+  command starts), YAML (after whitespace), and ERB (`<%# %>` tags, not `#` in
+  markup). A test checks every language with such a string.
+- Defects found on the project-stratified evaluation sample: Go raw strings
+  (`` `...` ``) containing `//` or `/*` became comments; in Bash, `#` inside a
+  word (`$#`, `${#a}`, `a#b`) started a comment; a UTF-8 byte-order mark at the
+  start of a file was counted as code, so the first line could not be a comment
+  line (both engines); and a Python triple-quoted string on the line after an
+  opening bracket, comma, or `=` was taken for a docstring.
+
 ## [0.2.0] - 2026-07-08
 
 This release adds a static code-analysis toolkit on top of the tokenizer:

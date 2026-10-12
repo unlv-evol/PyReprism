@@ -7,12 +7,76 @@ from ..metrics import CodeStats
 from ..tokens import Token, TokenType
 
 # Shared, language-agnostic patterns used by the generic tokenizer.
-_WHITESPACE_RE = re.compile(r'\s+')
+# A byte-order mark (U+FEFF) at the start of a file is whitespace, not code.
+_WHITESPACE_RE = re.compile(r'[\s\ufeff]+')
 _OPERATOR_RE = re.compile(r'[-+*/%=<>!&|^~?]+')
 
 
+_NEWLINE_RE = re.compile('\n')
+_new_token = tuple.__new__  # Token(...) without the NamedTuple call overhead
+
+
 def _newline_offsets(source: str) -> List[int]:
-    return [i for i, ch in enumerate(source) if ch == '\n']
+    return [m.start() for m in _NEWLINE_RE.finditer(source)]
+
+
+# Scoped inline flags (``(?i:...)``) let one combined pattern keep each
+# stage's own flags.
+_SCOPED_FLAGS = ((re.IGNORECASE, 'i'), (re.MULTILINE, 'm'), (re.DOTALL, 's'),
+                 (re.VERBOSE, 'x'), (re.ASCII, 'a'))
+_ANY_RE = re.compile(r'.', re.DOTALL)
+# Backreferences would point at the wrong groups once joined, and global
+# inline flags such as ``(?i)`` would apply to the whole joined pattern.
+_UNJOINABLE_RE = re.compile(r'\\[1-9]|\(\?P=|\(\?[aiLmsux]+\)')
+
+
+class _CodeLexer:
+    """The per-language plan for :meth:`BaseLanguage._tokenize_code`.
+
+    The stages (whitespace, string, number, identifier/keyword, operator) are
+    tried in order at each position, and the first non-empty match wins. Where
+    possible they are joined into one alternation, which the regex engine tries
+    in the same order, so each token costs one match instead of up to five.
+    Patterns with backreferences or global inline flags cannot be joined;
+    those languages, and any position where the joined pattern matches the
+    empty string, use the stage-by-stage loop.
+    """
+
+    __slots__ = ('stages', 'keywords', 'combined', 'kinds')
+
+    def __init__(self, cls):
+        self.keywords = frozenset(w.lower() for w in (cls.keywords() or []) if w)
+        self.stages = (
+            (_WHITESPACE_RE, TokenType.WHITESPACE),
+            (cls.string_regex(), TokenType.STRING),
+            (cls.number_regex(), TokenType.NUMBER),
+            (cls.identifier_regex(), None),  # identifier or keyword
+            (_OPERATOR_RE, TokenType.OPERATOR),
+        )
+        self.combined, self.kinds = None, None
+        parts, kinds, group = [], {}, 1
+        for regex, ttype in self.stages + ((_ANY_RE, TokenType.OTHER),):
+            if _UNJOINABLE_RE.search(regex.pattern):
+                return
+            flags = ''.join(c for f, c in _SCOPED_FLAGS if regex.flags & f)
+            parts.append(f'((?{flags}:{regex.pattern}))')
+            kinds[group] = ttype  # each stage is one outer group
+            group += 1 + regex.groups
+        try:
+            self.combined = re.compile('|'.join(parts))
+        except re.error:
+            return
+        self.kinds = kinds
+
+
+_LEXERS = {}
+
+
+def _code_lexer(cls) -> _CodeLexer:
+    lexer = _LEXERS.get(cls)
+    if lexer is None:
+        lexer = _LEXERS[cls] = _CodeLexer(cls)
+    return lexer
 
 
 def _line_at(newlines: List[int], index: int) -> int:
@@ -114,10 +178,18 @@ class BaseLanguage:
         Returns either the joined string or a list of non-comment segments when isList=True.
         """
         result = []
+        pos = 0
         for match in cls.comment_regex().finditer(source_code):
+            if match.start() > pos:
+                # Text the regex skipped is code, as in tokenize(); dropping it
+                # would delete characters such as a '/' inside a string.
+                result.append(source_code[pos:match.start()])
             non = match.groupdict().get('noncomment')
             if non is not None:
                 result.append(non)
+            pos = max(pos, match.end())
+        if pos < len(source_code):
+            result.append(source_code[pos:])
         if isList:
             return result
         return ''.join(result)
@@ -236,11 +308,15 @@ class BaseLanguage:
                 pos = m.start()
             if m.end() <= m.start():
                 continue
-            if m.groupdict().get('noncomment') is None:
-                tokens.append(Token(TokenType.COMMENT, m.group(), m.start(), m.end(),
-                                    _line_at(newlines, m.start())))
+            try:
+                non = m.group('noncomment')
+            except IndexError:  # a regex without a 'noncomment' group
+                non = None
+            if non is None:
+                tokens.append(_new_token(Token, (TokenType.COMMENT, m.group(), m.start(),
+                                                 m.end(), _line_at(newlines, m.start()))))
             else:
-                cls._tokenize_code(m.group('noncomment'), m.start(), newlines, tokens)
+                cls._tokenize_code(non, m.start(), newlines, tokens)
             pos = m.end()
         if pos < len(source):
             cls._tokenize_code(source[pos:], pos, newlines, tokens)
@@ -249,37 +325,53 @@ class BaseLanguage:
     @classmethod
     def _tokenize_code(cls, text: str, base: int, newlines: List[int],
                        tokens: List[Token]) -> None:
-        strx = cls.string_regex()
-        numx = cls.number_regex()
-        idx = cls.identifier_regex()
-        kws = {w.lower() for w in (cls.keywords() or []) if w}
-        stages = (
-            (_WHITESPACE_RE, TokenType.WHITESPACE),
-            (strx, TokenType.STRING),
-            (numx, TokenType.NUMBER),
-            (idx, None),  # identifier or keyword
-            (_OPERATOR_RE, TokenType.OPERATOR),
-        )
-        i, n = 0, len(text)
+        if not text:
+            return
+        lexer = _code_lexer(cls)
+        kws, kinds = lexer.keywords, lexer.kinds
+        append = tokens.append
+        keyword, identifier = TokenType.KEYWORD, TokenType.IDENTIFIER
+        # Line of position ``base`` (newlines strictly before it). Tokens that
+        # start on a newline get the next line, matching _line_at().
+        line = bisect.bisect_left(newlines, base) + 1
+        i = 0
+        if lexer.combined is not None:
+            # The last alternative matches any character, so matches are
+            # contiguous: each token starts where the previous one ended.
+            for m in lexer.combined.finditer(text):
+                end = m.end()
+                if end == i:
+                    break  # a stage matched the empty string: go stage by stage
+                val = m.group()
+                tt = kinds[m.lastindex]
+                if tt is None:
+                    tt = keyword if val.lower() in kws else identifier
+                breaks = val.count('\n')
+                append(_new_token(Token, (tt, val, base + i, base + end,
+                                          line + 1 if breaks and val[0] == '\n' else line)))
+                line += breaks
+                i = end
+            else:
+                return
+        n = len(text)
         while i < n:
-            for regex, ttype in stages:
+            for regex, ttype in lexer.stages:
                 m = regex.match(text, i)
                 if m and m.end() > i:
                     val = m.group()
                     if ttype is None:
-                        tt = TokenType.KEYWORD if val.lower() in kws else TokenType.IDENTIFIER
+                        tt = keyword if val.lower() in kws else identifier
                     else:
                         tt = ttype
-                    start = base + i
-                    tokens.append(Token(tt, val, start, start + len(val),
-                                        _line_at(newlines, start)))
-                    i = m.end()
                     break
             else:
-                start = base + i
-                tokens.append(Token(TokenType.OTHER, text[i], start, start + 1,
-                                    _line_at(newlines, start)))
-                i += 1
+                val, tt = text[i], TokenType.OTHER
+            start = base + i
+            breaks = val.count('\n')
+            append(_new_token(Token, (tt, val, start, start + len(val),
+                                      line + 1 if breaks and val[0] == '\n' else line)))
+            line += breaks
+            i += len(val)
 
     # -------------------------------------------------------------- line-preserving
     @classmethod
@@ -303,8 +395,88 @@ class BaseLanguage:
     @classmethod
     def stats(cls, source: str) -> CodeStats:
         """Compute line- and token-level :class:`CodeStats` for ``source``."""
-        from .. import _tokenops
-        return _tokenops.stats(cls.tokenize(source), source)
+        result = cls._counted_stats(source)
+        if result is None:
+            from .. import _tokenops
+            result = _tokenops.stats(cls.tokenize(source), source)
+        return result
+
+    @classmethod
+    def _counted_stats(cls, source: str):
+        """:meth:`stats` without building the token list.
+
+        Runs the same passes as :meth:`tokenize` but counts each token as it is
+        classified. Returns ``None`` (the caller then uses the token list) when
+        the language tokenizes differently or the joined code pattern cannot be
+        used, so the result always equals ``_tokenops.stats(tokenize(source))``.
+        """
+        if (cls.tokenize.__func__ is not BaseLanguage.tokenize.__func__
+                or cls._tokenize_code.__func__ is not BaseLanguage._tokenize_code.__func__):
+            return None
+        lexer = _code_lexer(cls)
+        combined = lexer.combined
+        if combined is None:
+            return None
+        kws, kinds = lexer.keywords, lexer.kinds
+        counts = dict.fromkeys(TokenType, 0)
+        whitespace, keyword, identifier = (TokenType.WHITESPACE, TokenType.KEYWORD,
+                                           TokenType.IDENTIFIER)
+        code_lines, comment_lines = set(), set()
+        newlines = _newline_offsets(source)
+
+        def code(text, base):  # mirrors the joined-pattern loop of _tokenize_code
+            line = bisect.bisect_left(newlines, base) + 1
+            i = 0
+            for m in combined.finditer(text):
+                end = m.end()
+                if end == i:
+                    return False
+                tt = kinds[m.lastindex]
+                if tt is None:
+                    tt = keyword if m.group().lower() in kws else identifier
+                counts[tt] += 1
+                breaks = text.count('\n', i, end)
+                if tt is not whitespace:
+                    if breaks:
+                        code_lines.update(range(line, line + breaks + 1))
+                    else:
+                        code_lines.add(line)
+                line += breaks
+                i = end
+            return True
+
+        pos = 0
+        for m in cls.comment_regex().finditer(source):
+            start, end = m.start(), m.end()
+            if start > pos:
+                if not code(source[pos:start], pos):
+                    return None
+                pos = start
+            if end <= start:
+                continue
+            try:
+                non = m.group('noncomment')
+            except IndexError:
+                non = None
+            if non is None:
+                counts[TokenType.COMMENT] += 1
+                line = _line_at(newlines, start)
+                comment_lines.update(range(line, line + source.count('\n', start, end) + 1))
+            elif not code(non, start):
+                return None
+            pos = end
+        if pos < len(source) and not code(source[pos:], pos):
+            return None
+        total = len(source.splitlines())
+        n_code = len(code_lines)
+        n_comment = len(comment_lines - code_lines)
+        return CodeStats(
+            lines=total, code_lines=n_code, comment_lines=n_comment,
+            blank_lines=max(total - n_code - n_comment, 0), characters=len(source),
+            comment_tokens=counts[TokenType.COMMENT], string_tokens=counts[TokenType.STRING],
+            number_tokens=counts[TokenType.NUMBER], keyword_tokens=counts[keyword],
+            identifier_tokens=counts[identifier], operator_tokens=counts[TokenType.OPERATOR],
+        )
 
     @classmethod
     def halstead(cls, source: str):
@@ -335,14 +507,7 @@ class BaseLanguage:
     def code_metrics(cls, source: str) -> dict:
         """Return a combined metrics dict (line stats + Halstead + complexity + MI)."""
         from .. import _tokenops
-        tokens = cls.tokenize(source)
-        stats = _tokenops.stats(tokens, source)
-        data = stats.as_dict()
-        data['halstead'] = _tokenops.halstead(tokens).as_dict()
-        data['cyclomatic_complexity'] = _tokenops.cyclomatic(tokens)
-        data['max_nesting_depth'] = _tokenops.max_nesting_depth(tokens)
-        data['maintainability_index'] = _tokenops.maintainability_index(tokens, stats.code_lines)
-        return data
+        return _tokenops.code_metrics(cls.tokenize(source), source)
 
     # ------------------------------------------------------------------ normalize
     @classmethod

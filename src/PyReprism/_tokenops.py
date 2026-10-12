@@ -72,9 +72,12 @@ def stats(tokens: List[Token], source: str) -> CodeStats:
         counts[tok.type] += 1
         if tok.type is TokenType.WHITESPACE:
             continue
-        span = range(tok.line, tok.line + tok.value.count('\n') + 1)
         target = comment_lines if tok.type is TokenType.COMMENT else code_lines
-        target.update(span)
+        breaks = tok.value.count('\n')
+        if breaks:
+            target.update(range(tok.line, tok.line + breaks + 1))
+        else:
+            target.add(tok.line)
     total = len(source.splitlines())
     code = len(code_lines)
     comment = len(comment_lines - code_lines)
@@ -144,10 +147,31 @@ def max_nesting_depth(tokens: List[Token]) -> int:
 
 def maintainability_index(tokens: List[Token], code_lines: int) -> float:
     """SEI-normalized Maintainability Index in ``[0, 100]`` (higher is better)."""
-    volume = halstead(tokens).volume
-    complexity = cyclomatic(tokens)
+    return _maintainability(halstead(tokens).volume, cyclomatic(tokens), code_lines)
+
+
+def _maintainability(volume: float, complexity: int, code_lines: int) -> float:
     raw = (171
            - 5.2 * math.log(max(volume, 1))
            - 0.23 * complexity
            - 16.2 * math.log(max(code_lines, 1)))
     return round(max(0.0, min(100.0, raw * 100 / 171)), 2)
+
+
+def code_metrics(tokens: List[Token], source: str) -> dict:
+    """Line stats, Halstead, complexity, nesting, and MI from one token list.
+
+    Equivalent to calling :func:`stats`, :func:`halstead`, :func:`cyclomatic`,
+    :func:`max_nesting_depth`, and :func:`maintainability_index`, but Halstead
+    and complexity are computed once instead of twice.
+    """
+    stats_obj = stats(tokens, source)
+    hal = halstead(tokens)
+    complexity = cyclomatic(tokens)
+    data = stats_obj.as_dict()
+    data['halstead'] = hal.as_dict()
+    data['cyclomatic_complexity'] = complexity
+    data['max_nesting_depth'] = max_nesting_depth(tokens)
+    data['maintainability_index'] = _maintainability(hal.volume, complexity,
+                                                     stats_obj.code_lines)
+    return data
