@@ -11,6 +11,13 @@
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/unlv-evol/pyreprism/main)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://pypi.org/project/PyReprism//)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://pypi.org/project/PyReprism/)
 
+> [!IMPORTANT]
+> **SANER 2027 Tool Demo Track reviewers:** the demonstration video is at
+> **[https://youtu.be/IXc-NP5t4GU](https://youtu.be/IXc-NP5t4GU)**.
+> The version evaluated in the paper is tagged
+> [`saner2027-artifact`](https://github.com/unlv-evol/PyReprism/tree/saner2027-artifact);
+> the latest release is on [PyPI](https://pypi.org/project/PyReprism/).
+
 # PyReprism
 
 PyReprism is a Python framework that helps researchers and developers the task of source code preprocessing. With PyReprism, you can easily match, extract, count, and remove comments, whitespaces, operators, numbers and other language specific constructs from over **187 programming languages and file extensions** — and **500+** with the optional Pygments backend.
